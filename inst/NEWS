@@ -1,0 +1,28 @@
+TODO:
+
+* The probability of each observation being used by the model is not 
+  equal because of the sampling scheme. The observations towards the start
+  and end of the time series are less likely to appear in the segments
+  A fair sampling strategy is needed for segment selection.
+  
+* Currently the package requires UCR time series database format (each time 
+  series is a row and columns are the observations over time). Therefore,
+  time series are assumed to be the same length although LPS can handle
+  time series of different length which requries changes in input format.
+  
+* LPS can work for multivariate time series similarity. Current version
+  needs modifications for multivariate time series.
+  
+* LPS can work for categorical time series (i.e. DNA sequences). Current version
+  requires modification for categorical variables
+  
+* Maximum depth parameter specifies the limit on the number of terminal
+  (leaf) nodes. Hence, the depth of the trained trees can be larger based 
+  on data characteristics. If tree is not balanced, trees with depth larger
+  than maximum depth are expected to be built. On the other hand, similarity
+  computations take the maximum depth into consideration. In other words, 
+  some part of the tree might be useless (loss of time).
+========================================================================
+Change in 1.0-0:
+
+* No recent news
