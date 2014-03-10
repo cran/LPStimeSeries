@@ -12,10 +12,10 @@
     if (any(is.na(x)))
         stop("missing values in newdata")
 	
-    if(is.null(maxdepth)) maxdepth=object$maxdepth
+    if(is.null(maxdepth)) maxdepth <- object$maxdepth
     
     if(maxdepth>object$maxdepth) {
-		maxdepth=object$maxdepth
+		maxdepth <- object$maxdepth
 		warning("invalid depth: reset to the maximum depth provided during training!")
     }
 		

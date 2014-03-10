@@ -82,8 +82,7 @@
   Breiman, L (2002), ``Manual On Setting Up, Using, And Understanding
   Random Forests V3.1``, \url{http://oz.berkeley.edu/users/breiman/Using_random_forests_V3.1.pdf}.
   
-  Baydogan, M. G. (2013), ``Learned Pattern Similarity``,
-  
+  Baydogan, M. G. (2013), ``Learned Pattern Similarity``, Homepage: 
   \url{http://www.mustafabaydogan.com/learned-pattern-similarity-lps.html}.
 }
 \author{Mustafa Gokce Baydogan \email{baydoganmustafa@gmail.com}, 

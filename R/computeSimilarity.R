@@ -6,13 +6,13 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL,maxdept
 			stop("object not of class learnPattern")
 	  if (is.null(object$forest)) stop("No forest component in the object")
 	  if (is.null(refseries) && is.null(testseries)) stop("You need to provide two time series data sets for similarity computation")
-	  terminal=FALSE
+	  terminal <- FALSE
   }
   
   if(terminal){ #if computation will be performed over representations
-	  ntest=nrow(testrepresentation)
-	  ntrain=nrow(refrepresentation)
-	  nofterminal=ncol(refrepresentation)
+	  ntest <- nrow(testrepresentation)
+	  ntrain <- nrow(refrepresentation)
+	  nofterminal <- ncol(refrepresentation)
 	  ans <- .C("compute_similarity", 
 				as.integer(as.matrix(testrepresentation)), 
 				as.integer(ntest), 
@@ -23,9 +23,9 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL,maxdept
 	  return(matrix(ans$result,ntest,ntrain))
 	  
   } else {	 #if computation will be performed over raw time series
-    if(is.null(maxdepth)) maxdepth=object$maxdepth
+    if(is.null(maxdepth)) maxdepth <- object$maxdepth
     if(maxdepth>object$maxdepth) {
-		maxdepth=object$maxdepth
+		maxdepth <- object$maxdepth
 		warning("invalid depth: reset to the maximum depth provided during training!")
     }
 	mdim <- ncol(refseries)

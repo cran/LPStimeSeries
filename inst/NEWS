@@ -1,9 +1,16 @@
 TODO:
 
+* Patterns are learned using ensemble of regression trees. Approach is
+  embarrassingly parallel. A combine routine that can combine multiple trees
+  in an ensemble is required to be implemented to benefit from parallelism.
+  
 * The probability of each observation being used by the model is not 
   equal because of the sampling scheme. The observations towards the start
   and end of the time series are less likely to appear in the segments
   A fair sampling strategy is needed for segment selection.
+  
+* Indetifying common patterns and plotting them is needed for interpretability
+  purposes.
   
 * Currently the package requires UCR time series database format (each time 
   series is a row and columns are the observations over time). Therefore,
@@ -14,15 +21,13 @@ TODO:
   needs modifications for multivariate time series.
   
 * LPS can work for categorical time series (i.e. DNA sequences). Current version
-  requires modification for categorical variables
-  
-* Maximum depth parameter specifies the limit on the number of terminal
-  (leaf) nodes. Hence, the depth of the trained trees can be larger based 
-  on data characteristics. If tree is not balanced, trees with depth larger
-  than maximum depth are expected to be built. On the other hand, similarity
-  computations take the maximum depth into consideration. In other words, 
-  some part of the tree might be useless (loss of time).
-========================================================================
-Change in 1.0-0:
+  requires modification for categorical variables.
 
-* No recent news
+* Regression trees in LPS can be used for prediction (to characterize the time 
+  series). An estimate of error rate (either out-of-bag or over all series) can 
+  be provided to determine the number of trees.
+  
+========================================================================
+Change in 1.0-1:
+
+* Fixed some minor problems with memory allocations.

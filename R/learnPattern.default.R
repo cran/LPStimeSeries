@@ -16,10 +16,10 @@
     p <- ncol(x)
 
 	if(length(segment.factor)>1){
-		random.seg=TRUE
-		segment.factor=sort(segment.factor)
+		random.seg <- TRUE
+		segment.factor <- sort(segment.factor)
 	} else {
-		random.seg=FALSE
+		random.seg <- FALSE
 	}
     if (n == 0) stop("data (x) has 0 rows")
     
@@ -31,7 +31,7 @@
     ## Make sure mtry is in reasonable range.
     if (mtry != 1)
         warning("invalid mtry: reset to within valid range")
-    mtry = 1
+    mtry <- 1
 
     ## Check for NAs.
     if (any(is.na(x))) stop("NA not permitted in predictors")
@@ -45,15 +45,15 @@
     nrnodes <- 2^(maxdepth+1) - 1
 	
 	if(!replace){
-		keep.inbag=FALSE
+		keep.inbag <- FALSE
 	} else {
-		sampsize=ceiling(.632*n)
+		sampsize <- ceiling(.632*n)
 	}
 		
 	if(random.seg){
-		segment.length=runif(ntree,segment.factor[1],segment.factor[2])
+		segment.length <- runif(ntree,segment.factor[1],segment.factor[2])
 	} else {
-		segment.length=rep(segment.factor[1],ntree)
+		segment.length <- rep(segment.factor[1],ntree)
 	}
 
 	rfout <- .C("regRF_time_series",
@@ -71,7 +71,6 @@
                     as.integer(do.trace),  
                     target = integer(ntree),           
                     targetType = integer(ntree),   
-                    ypred = double(n),
                     ndbigtree = integer(ntree),
                     nodedepth = matrix(integer(nrnodes * nt), ncol=nt),
                     nodestatus = matrix(integer(nrnodes * nt), ncol=nt),
@@ -85,7 +84,7 @@
                     replace = as.integer(replace),
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(1),
-                    PACKAGE="LPStimeSeries")[c(13:27)]
+                    PACKAGE="LPStimeSeries")[c(13:26)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)

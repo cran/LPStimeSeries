@@ -17,7 +17,7 @@
 
 void regRF_time_series(double *x, double *seglength, int *tardiff, int *segdiff, 
 		int *xdim, int *sampsize, int *nthsize, int *nrnodes, int *nTree, int *mtry, 
-		int *cat, int *jprint, int *target, int *targetType, double *yptr, int *treeSize, 
+		int *cat, int *jprint, int *target, int *targetType, int *treeSize, 
 		int *nodedepth, int *nodestatus, int *splitType, int *lDaughter, int *rDaughter, 
 		double *avnode, int *mbest, double *upper, int *keepf, int *replace, int *inbag) {
 
@@ -54,15 +54,18 @@ void regRF_time_series(double *x, double *seglength, int *tardiff, int *segdiff,
 				for (n = 0; n < nsample; ++n) inbag[n + j * nsample] = in[n];
 			}
 			/* grow the regression tree */
-			regTree_time_series(xb, seglength[j], *tardiff, *segdiff, maxdepth, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
+			regTree_time_series(xb, seglength + j, *tardiff, *segdiff, maxdepth, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodedepth + idx, nodestatus + idx, splitType + idx, *nrnodes,
-                treeSize + j, nthsize[j], *mtry, mbest + idx, target + j, targetType + j, cat);
+                treeSize + j, *nthsize, *mtry, mbest + idx, target + j, targetType + j, cat);
+           
+            Free(xb);
+            Free(in);
 		}  else { //use all data
-			regTree_time_series(x, seglength[j], *tardiff, *segdiff, maxdepth, mdim, nsample, lDaughter + idx, rDaughter + idx,
+			regTree_time_series(x, seglength + j, *tardiff, *segdiff, maxdepth, mdim, nsample, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodedepth + idx, nodestatus + idx, splitType + idx, *nrnodes,
-                treeSize + j, nthsize[j], *mtry, mbest + idx, target + j, targetType + j, cat);
+                treeSize + j, *nthsize, *mtry, mbest + idx, target + j, targetType + j, cat);
 		}                
-        
+  
         if(*jprint>0&&(j+1)%(*jprint)==0)
 			Rprintf("Tree %d over\n",j+1);
     }

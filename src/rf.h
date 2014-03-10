@@ -17,7 +17,7 @@
 // swap two integers 
 #define swapInt(a, b) ((a ^= b), (b ^= a), (a ^= b));
            
-void regTree_time_series(double *x, double segfactor, int targetdiff, int segmentdiff, int maxdepth, 
+void regTree_time_series(double *x, double *segfactor, int targetdiff, int segmentdiff, int maxdepth, 
 			int mdim, int nsample, int *lDaughter, int *rDaughter, double *upper, double *avnode, 
 			int *nodedepth, int *nodestatus, int *splitType, int nrnodes, int *treeSize, int nthsize, 
 			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat);

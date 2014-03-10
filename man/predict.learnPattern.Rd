@@ -30,8 +30,7 @@
   Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
   5-32.
   
-  Baydogan, M. G. (2013), ``Learned Pattern Similarity``,
-  
+  Baydogan, M. G. (2013), ``Learned Pattern Similarity``, Homepage: 
   \url{http://www.mustafabaydogan.com/learned-pattern-similarity-lps.html}.
 }
 \author{Mustafa Gokce Baydogan}

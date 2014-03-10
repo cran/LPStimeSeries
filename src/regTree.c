@@ -146,23 +146,23 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     Free(xt);
     Free(ut);
 }
-
-void regTree_time_series(double *x, double segfactor, int targetdiff, int segmentdiff, int maxdepth, 
+                
+void regTree_time_series(double *x, double *segfactor, int targetdiff, int segmentdiff, int maxdepth, 
 			int mdim, int nsample, int *lDaughter, int *rDaughter, double *upper, double *avnode, 
 			int *nodedepth, int *nodestatus, int *splitType, int nrnodes, int *treeSize, int nthsize, 
 			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat) {
 			 
     int i, j, k, m, ncur, *jdex, *nodestart, *nodepop, nofsampleobs, segmentlen, cur_target, cur_x;
-    int ndstart, ndend, ndendl, nodecnt, jstat, msplit, cnt;
+    int ndstart, ndend, ndendl, nodecnt, jstat, msplit, cnt, totalnodes;
     double d, ss, av, decsplit, ubest, sumnode, *y, *obsx, rndm;
 
-	segmentlen=(int)(segfactor*mdim);
-	nofsampleobs=segmentlen*nsample;
+	segmentlen = (int) (*segfactor * mdim);
+	nofsampleobs = segmentlen * nsample;
 
     nodestart = (int *) Calloc(nrnodes, int);
     nodepop   = (int *) Calloc(nrnodes, int);
      
-    obsx   = (double *) Calloc(nofsampleobs, double);
+    obsx = (double *) Calloc(nofsampleobs, double);
     y   = (double *) Calloc(nofsampleobs, double);
       
    // decide if target is difference series
@@ -317,14 +317,15 @@ void regTree_time_series(double *x, double segfactor, int targetdiff, int segmen
 		/* Augment the tree by two nodes. */			
 		ncur += 2;
     }
-    *treeSize = nrnodes;
+    totalnodes = nrnodes;
     
     for (k = nrnodes - 1; k >= 0; --k) {
-        if (nodestatus[k] == 0) (*treeSize)--;
+        if (nodestatus[k] == 0) totalnodes--;
         if (nodestatus[k] == NODE_TOSPLIT) {
             nodestatus[k] = NODE_TERMINAL;
         }
     }
+    *treeSize=totalnodes;
     
     Free(nodestart);
     Free(jdex);

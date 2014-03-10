@@ -1,18 +1,16 @@
-citHeader("To cite LPS in publications use:")
+citHeader("To cite LPStimeSeries in publications use:")
 
-citEntry(entry="Article",
-         title = "Learned Pattern Similarity and Representation for Time Series by LPS",
-         author = personList(person(last="Baydogan", first="Mustafa", middle="Gokce")),
-	 journal = "R News",
-         year         = "2002",
-         volume       = "2",
-         number       = "3",
-         pages        = "18-22",
-         url          = "http://CRAN.R-project.org/doc/Rnews/",
-         
-         textVersion = 
-         paste("A. Liaw and M. Wiener (2014). ", 
-               "Classification and Regression by randomForest. ",
-               "R News 2(3), 18--22.",
+	 citEntry(entry="Article",
+         title  = "Time Series Similarity Based on a Pattern-based Representation",
+         author = personList(person(last="Baydogan", first="Mustafa", middle="Gokce"),
+	                         person(last="Runger", first="George"),
+	                         person(last="Yamak", first="Didem")),
+		journal = "submitted for publication",
+        year    = "2013",      	 
+        
+        textVersion = 
+        paste("M. G. Baydogan, G. Runger and D. Yamak(2013). ", 
+               "Time Series Similarity Based on a Pattern-based Representation. ",
+               "submitted for publication",
                sep=""))
  
