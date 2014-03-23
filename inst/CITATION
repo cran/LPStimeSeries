@@ -9,7 +9,7 @@ citHeader("To cite LPStimeSeries in publications use:")
         year    = "2013",      	 
         
         textVersion = 
-        paste("M. G. Baydogan, G. Runger and D. Yamak(2013). ", 
+        paste("M. G. Baydogan, G. Runger and D. Yamak (2013). ", 
                "Time Series Similarity Based on a Pattern-based Representation. ",
                "submitted for publication",
                sep=""))

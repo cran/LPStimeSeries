@@ -27,11 +27,11 @@
 	Basically, it is the count of observed patterns at each terminal node.
 }
 \references{
-  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
-  5-32.
-  
   Baydogan, M. G. (2013), ``Learned Pattern Similarity``, Homepage: 
   \url{http://www.mustafabaydogan.com/learned-pattern-similarity-lps.html}.
+  
+  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
+  5-32.
 }
 \author{Mustafa Gokce Baydogan}
 
@@ -47,7 +47,7 @@ ensemble=learnPattern(GunPoint$trainseries)
 trainRep=predict(ensemble, GunPoint$trainseries, nodes=TRUE)
 testRep=predict(ensemble, GunPoint$testseries, nodes=TRUE)
 
-##check size of the representation for training data
+## Check size of the representation for training data
 print(dim(trainRep))
 }
 \keyword{similarity}

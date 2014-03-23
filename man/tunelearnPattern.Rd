@@ -48,14 +48,11 @@ tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5,
 }
 
 \references{
-  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
-  5-32.
-
-  Breiman, L (2002), ``Manual On Setting Up, Using, And Understanding
-  Random Forests V3.1``, \url{http://oz.berkeley.edu/users/breiman/Using_random_forests_V3.1.pdf}.
-  
   Baydogan, M. G. (2013), ``Learned Pattern Similarity``, Homepage: 
   \url{http://www.mustafabaydogan.com/learned-pattern-similarity-lps.html}.
+  
+  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
+  5-32.
 }
 \author{Mustafa Gokce Baydogan \email{baydoganmustafa@gmail.com}, 
  based on original Fortran code by Leo Breiman and Adele Cutler,
@@ -67,13 +64,13 @@ tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5,
 data(GunPoint)
 set.seed(71)
 
-##Tune segment length level and depth on GunPoint training series
+## Tune segment length level and depth on GunPoint training series
 tuned=tunelearnPattern(GunPoint$trainseries,GunPoint$trainclass)
 print(tuned$best.error)
 print(tuned$best.seg)
 print(tuned$best.depth)
 
-##Use tuned parameters to learn patterns
+## Use tuned parameters to learn patterns
 ensemble=learnPattern(GunPoint$trainseries,segment.factor=tuned$best.seg,
 					  maxdepth=tuned$best.depth)
 

@@ -7,7 +7,7 @@ tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.
 	param_combination <- matrix(0,length(segmentlevels)*ndepthlev,2)
 
 	noftrain_labeled <- nrow(x)
-	print(noftrain_labeled)
+
 	#cross-validation indices
 	id <- sample(rep(seq.int(nfolds), length.out=noftrain_labeled))
     cv <- lapply(seq.int(nfolds), function(x) list(

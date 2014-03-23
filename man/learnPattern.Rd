@@ -10,16 +10,17 @@
 }
 \usage{
 \method{learnPattern}{default}(x,
-   segment.factor=c(0.1,0.5),
+   segment.factor=c(0.1,0.9),
    random.seg=TRUE, target.diff=TRUE, segment.diff=TRUE, 
-   ntree=500,
+   ntree=200,
    mtry=1,
    replace=FALSE,
-   sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
+   sampsize=if (replace) ceiling(0.632*nrow(x)) else nrow(x),
    maxdepth=6,
-   nodesize=5,
+   nodesize=10,
    do.trace=FALSE,
    keep.forest=TRUE,
+   oob.pred=FALSE,
    keep.inbag=FALSE, ...)
 \method{print}{learnPattern}(x, ...)
 }
@@ -37,7 +38,7 @@
     	if there is no concern regarding the computation time; }
   \item{mtry}{Number of predictor segments randomly sampled as candidates at each
    	split.  Note that it is preset to 1 for now.}
-  \item{replace}{Should bagging of time series be done? All training time series are used
+  \item{replace}{Should bagging of time series be done with replacement? All training time series are used
    	if \code{FALSE} (default).}
   \item{sampsize}{Size(s) of sample to draw with replacement if replace is set
 	to \code{TRUE}}
@@ -49,6 +50,8 @@
     output is printed for every \code{do.trace} trees.}
   \item{keep.forest}{If set to \code{FALSE}, the forest will not be
     retained in the output object. }
+  \item{oob.pred}{if replace is set to \code{TRUE}, predictions for the time
+     series observations are returned. }    
   \item{keep.inbag}{Should an \code{n} by \code{ntree} matrix be
     returned that keeps track of which samples are ``in-bag'' in which
     trees}
@@ -64,26 +67,34 @@
   \item{type}{\code{regression}}
   \item{segment.factor}{the proportion of the time series length to be used for 
      both predictors and targets.}
+  \item{segment.length}{used segment length settings by the trees of ensemble}     
   \item{nobs}{number of observations in a segment}
   \item{ntree}{number of trees grown}
   \item{maxdepth}{maximum depth level for each tree}
   \item{mtry}{number of predictor segments sampled for spliting at each node.}
   \item{target}{starting time of the target segment for each tree.}
+  \item{target.type}{type of the target segment; 1 if observed series, 2 if difference
+	series.}  
   \item{forest}{a list that contains the entire forest; \code{NULL} if
     \code{keep.forest=FALSE}.}
+  \item{oobprediction}{predicted observations based on ``out-of-bag'' time series 
+    are returned if \code{oob.pred=TRUE}}
   \item{inbag}{\code{n} by \code{ntree} matrix be returned that keeps track of 
     which samples are ``in-bag'' in which trees if \code{keep.inbag=TRUE}}
 }
+\note{
+  OOB predictions may have missing values (i.e. \code{NA}) if time series is not
+  left out-of-bag during computations. Even, it is left out-of-bag, there is a
+  potential of some observations (i.e. time frames) not being selected as the target.
+  In such cases, there will no OOB predictions.
+}
 
 \references{
-  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
-  5-32.
-
-  Breiman, L (2002), ``Manual On Setting Up, Using, And Understanding
-  Random Forests V3.1``, \url{http://oz.berkeley.edu/users/breiman/Using_random_forests_V3.1.pdf}.
-  
   Baydogan, M. G. (2013), ``Learned Pattern Similarity``, Homepage: 
   \url{http://www.mustafabaydogan.com/learned-pattern-similarity-lps.html}.
+  
+  Breiman, L. (2001), \emph{Random Forests}, Machine Learning 45(1),
+  5-32.
 }
 \author{Mustafa Gokce Baydogan \email{baydoganmustafa@gmail.com}, 
  based on original Fortran code by Leo Breiman and Adele Cutler,
@@ -111,6 +122,21 @@ predicted=GunPoint$trainclass[NearestNeighbor]
 ## Compute the percentage of accurate predictions
 accuracy=sum(predicted==GunPoint$testclass)/nrow(GunPoint$testseries)
 print(100*accuracy)
+
+## Learn patterns by training each tree on a random subsample
+## and classify test time series
+ensemble=learnPattern(GunPoint$trainseries,replace=TRUE)
+similarity=computeSimilarity(ensemble,GunPoint$testseries,GunPoint$trainseries)
+NearestNeighbor=apply(similarity,1,which.min)
+predicted=GunPoint$trainclass[NearestNeighbor]
+print(predicted)
+
+## Learn patterns and do predictions on OOB time series
+ensemble=learnPattern(GunPoint$trainseries,replace=TRUE,target.diff=FALSE,oob.pred=TRUE)
+## Plot first series and its OOB approximation
+plot(GunPoint$trainseries[1,],type='l',lty=1,xlab='Time',ylab='Observation',lwd=2)
+points(c(1:ncol(GunPoint$trainseries)),ensemble$oobpredictions[1,],type='l',col=2,lty=2,lwd=2)
+legend('topleft',c('Original series','Approximation'),col=c(1,2),lty=c(1,2),lwd=2)
 
 }
 \keyword{similarity}

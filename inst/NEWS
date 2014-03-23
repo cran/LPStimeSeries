@@ -9,8 +9,8 @@ TODO:
   and end of the time series are less likely to appear in the segments
   A fair sampling strategy is needed for segment selection.
   
-* Indetifying common patterns and plotting them is needed for interpretability
-  purposes.
+* Identifying common patterns and plotting them should be improved for 
+  interpretability purposes.
   
 * Currently the package requires UCR time series database format (each time 
   series is a row and columns are the observations over time). Therefore,
@@ -23,11 +23,41 @@ TODO:
 * LPS can work for categorical time series (i.e. DNA sequences). Current version
   requires modification for categorical variables.
 
-* Regression trees in LPS can be used for prediction (to characterize the time 
-  series). An estimate of error rate (either out-of-bag or over all series) can 
-  be provided to determine the number of trees.
-  
 ========================================================================
+Change in 1.0-2:
+
+* learnPattern 'replace' argument was returning a segmentation fault, fixed
+
+* learnPattern now uses segment.factor=c(0.1,0.9) as default for random
+  segment generation and ntree=200 as default for number of trees in the
+  ensemble
+   
+* Prediction of observed values is now enabled. This can be used for
+  different purposes such as time series modeling and denoising
+
+* If replace is set to TRUE, randomly selected time series are left 
+  out-of-bag during training of each tree and predictions are made over 
+  the segments. OOB predictions are now returned by learnPattern and 
+  also OOB error is computed over the trees. Mean square error (MSE) is 
+  returned. (added the option oob.pred to determine whether predictions 
+  are returned. 
+  
+* MSE based on OOB predictions can be plotted by simply running plot function
+  on learnPattern objects (if sampling is done). This estimate can be used
+  to set the number of trees.
+  
+* getTreeInfo is introduced for extracting the tree structures from the
+  ensemble (learnPattern object)
+
+* Transformation to matrix is done internally for representing single time 
+  series
+
+* plotMDS is introduced for transforming similarity information to latent 
+  variables using traditional multidimensional scaling for plotting purposes
+  
+* Identifying common patterns and plotting them is enabled for interpretability
+  purposes.
+    
 Change in 1.0-1:
 
 * Fixed some minor problems with memory allocations.

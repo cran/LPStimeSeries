@@ -37,6 +37,11 @@ computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
  be used (requires further implementation) with the learned representations.
 }
 
+\references{
+  Baydogan, M. G. (2013), ``Learned Pattern Similarity``, Homepage: 
+  \url{http://www.mustafabaydogan.com/learned-pattern-similarity-lps.html}.
+}
+
 \seealso{
   \code{\link{learnPattern}}, \code{\link{predict.learnPattern}}
 }

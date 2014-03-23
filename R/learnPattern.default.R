@@ -1,20 +1,35 @@
 "learnPattern.default" <-
     function(x,
-    	     segment.factor=c(0.1,0.5),
+    	     segment.factor=c(0.1,0.9),
 	         random.seg=TRUE, target.diff=TRUE, segment.diff=TRUE, 
-             ntree=500,
+             ntree=200,
              mtry=1,
              replace=FALSE,
-             sampsize = if (replace) nrow(x) else ceiling(.632*nrow(x)),
+             sampsize = if (replace) ceiling(0.632*nrow(x)) else nrow(x),
              maxdepth = 6,
-             nodesize = 5,
+             nodesize = 10,
 	         do.trace=FALSE,
              keep.forest=TRUE,
-             keep.inbag=FALSE, ...) {
-              
+             oob.pred=FALSE,
+             keep.inbag=FALSE, 
+             ...) {
+
+	
+    if(!is.matrix(x)){
+		if(length(x)>0){ #single time series
+			x <- t(as.matrix(x))
+		}
+		else{
+			stop("data (x) has 0 rows")
+		}   
+    } 
+     
+    if (!is.numeric(x)) stop("data (x) is not numeric") 
+        
+    sampsize <- sampsize  
     n <- nrow(x)
     p <- ncol(x)
-
+	
 	if(length(segment.factor)>1){
 		random.seg <- TRUE
 		segment.factor <- sort(segment.factor)
@@ -32,7 +47,13 @@
     if (mtry != 1)
         warning("invalid mtry: reset to within valid range")
     mtry <- 1
-
+	
+	if(oob.pred && target.diff){
+		warning("Target segment cannot be difference series for OOB predictions, resetting target.diff=FALSE")
+		target.diff=FALSE
+	}
+		
+		
     ## Check for NAs.
     if (any(is.na(x))) stop("NA not permitted in predictors")
 
@@ -43,11 +64,13 @@
     
     ## possible total # of nodes
     nrnodes <- 2^(maxdepth+1) - 1
-	
+
 	if(!replace){
 		keep.inbag <- FALSE
+		oob.pred <- FALSE
 	} else {
-		sampsize <- ceiling(.632*n)
+		if(sampsize > n) stop("Sample size cannot be larger than number of time series")
+		keep.inbag <- TRUE
 	}
 		
 	if(random.seg){
@@ -69,8 +92,9 @@
                     as.integer(mtry),
                     as.integer(ncat),
                     as.integer(do.trace),  
+                    as.integer(oob.pred),  
                     target = integer(ntree),           
-                    targetType = integer(ntree),   
+                    target.type = integer(ntree),   
                     ndbigtree = integer(ntree),
                     nodedepth = matrix(integer(nrnodes * nt), ncol=nt),
                     nodestatus = matrix(integer(nrnodes * nt), ncol=nt),
@@ -82,9 +106,13 @@
                     xbestsplit = matrix(double(nrnodes * nt), ncol=nt),
                     keep = as.integer(c(keep.forest, keep.inbag)),
                     replace = as.integer(replace),
+                    oobpredictions = if (oob.pred)
+                       double(n * p) else double(1),
+                    ooberrors = if (oob.pred)
+                       double(ntree) else double(1),
                     inbag = if (keep.inbag)
-                    matrix(integer(n * ntree), n) else integer(1),
-                    PACKAGE="LPStimeSeries")[c(13:26)]
+                       matrix(integer(n * ntree), n) else integer(1),
+                    PACKAGE="LPStimeSeries")[c(14:29)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)
@@ -108,6 +136,8 @@
         cl <- match.call()
         cl[[1]] <- as.name("learnPattern")
 
+		if (oob.pred) rfout$oobpredictions[rfout$oobpredictions==-999]=NA
+		
         out <- list(call = cl,
                     type = "regression",
 					segment.factor = segment.factor,
@@ -117,14 +147,18 @@
                     maxdepth = maxdepth,
                     mtry = mtry,
                     target = rfout$target,
-                    targetType = rfout$targetType,
+                    target.type = rfout$target.type,
                     forest = if (keep.forest)
-                    c(rfout[c("ndbigtree", "nodedepth", "nodestatus", "splitType", "leftDaughter",
+                      c(rfout[c("ndbigtree", "nodedepth", "nodestatus", "splitType", "leftDaughter",
                               "rightDaughter", "nodepred", "bestvar",
                               "xbestsplit")],
-                    list(nrnodes=max.nodes)) else NULL,
+                      list(nrnodes=max.nodes)) else NULL,
+					oobpredictions= if (oob.pred)
+                      t(matrix(rfout$oobpredictions, ncol=n)) else NULL,
+					ooberrors= if (oob.pred)
+                      rfout$ooberrors else NULL,                    
                     inbag = if (keep.inbag)
-                    matrix(rfout$inbag, nrow(rfout$inbag),ntree) else NULL)
+                      matrix(rfout$inbag, nrow(rfout$inbag),ntree) else NULL)
                            
     class(out) <- "learnPattern"
     return(out)

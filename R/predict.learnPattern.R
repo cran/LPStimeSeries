@@ -5,13 +5,24 @@
     if (!inherits(object, "learnPattern"))
         stop("object not of class learnPattern")
     if (is.null(object$forest)) stop("No forest component in the object")
-
+	if (!nodes&&sum(object$target.type==2)>0)  stop("Difference series are used as target segments")
+	
     x <- newdata
-    if (nrow(x) == 0)
-        stop("newdata has 0 rows")
+
     if (any(is.na(x)))
         stop("missing values in newdata")
-	
+        
+    if (!is.numeric(x)) stop("newdata is not numeric") 
+    
+    if(!is.matrix(x)){
+		if(length(x)>0){ #single time series
+			x <- t(as.matrix(x))
+		}
+		else{
+			stop("data (x) has 0 rows")
+		}   
+    } 
+                   	
     if(is.null(maxdepth)) maxdepth <- object$maxdepth
     
     if(maxdepth>object$maxdepth) {
@@ -25,8 +36,6 @@
 
     mdim <- ncol(x)
     ntest <- nrow(x)
-    nclass <- object$forest$nclass
-    nrnodes <- object$forest$nrnodes
     
     ## get rid of warning:
     op <- options(warn=-1)
@@ -63,7 +72,34 @@
 				
 		res=t(matrix(ans$nodeRep[1:(ans$lenRep*ntest)], nrow=ans$lenRep))
 		
-	} 
+	} else {
+		keepIndex <- c("predicted","count")
+		ans <- .C("regForest_predict",  
+				as.double(x),
+				as.integer(ntest),
+				as.integer(which.tree),
+				as.double(object$segment.length),
+				as.integer(mdim),
+				as.integer(object$ntree),
+				object$forest$leftDaughter,
+				object$forest$rightDaughter,
+				object$forest$nodestatus,
+				object$forest$nodedepth,
+				object$forest$nrnodes,
+				object$forest$xbestsplit,
+				as.integer(object$forest$bestvar),
+				as.integer(object$forest$splitType),
+				as.double(object$forest$nodepred),
+				as.integer(object$forest$ndbigtree),
+				as.integer(object$target),
+				as.integer(maxdepth),
+				predicted = double(ntest * mdim),
+				count = integer(mdim),
+				PACKAGE = "LPStimeSeries")[keepIndex]
+				
+		ans$predicted[ans$predicted==-999]=NA
+		res=list(predictions=t(matrix(ans$predicted, nrow=mdim)),target.count=ans$count)	
+	}
     res
 } 
     

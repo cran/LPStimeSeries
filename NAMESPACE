@@ -1,5 +1,9 @@
 useDynLib(LPStimeSeries)
-export(learnPattern,tunelearnPattern,computeSimilarity,LPSNews)
+
+export(learnPattern, tunelearnPattern, computeSimilarity, getTreeInfo,
+	   plotMDS, visualizePattern, LPSNews)
+
 S3method(print, learnPattern)
 S3method(predict, learnPattern)
+S3method(plot, learnPattern)
 S3method(learnPattern, default)

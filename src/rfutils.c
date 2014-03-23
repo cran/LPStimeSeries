@@ -34,15 +34,28 @@ void compute_similarity(int *testterminal, int *noftest, int *trainterminal, int
 		}
    }
 }
+
     /*************************************
      * Codes to use for future development
      *************************************/
-  
-/*   
-void minusDouble(double *x, int length) {
-	int i;
-	for(i=0;i<length;i++)
-		x[i]=-999;
+/*  void findNN(int *testterminal, int *noftest, int *trainterminal, int *noftrain, int *nofterminal, int *K, int *result){
+    int i,k,j,bestsofar,dist;
+
+    for(j=0;j<*noftest;j++){
+		bestsofar=30000;	
+        for(i=0;i<*noftrain;i++){
+			dist=0;
+			for(k=0;k<*nofterminal;k++){
+				dist=dist+abs(trainterminal[*noftrain*k+i]-testterminal[*noftest*k+j]);
+				if(bestsofar<dist)
+					break;
+			}
+			if(dist<bestsofar){
+				bestsofar=dist;
+				result[j]=i+1;
+			}
+		}
+   }
 }
       
 void generate_codebook(int *nodestatus, int *nofnode, int *noftree, int *terminal,  

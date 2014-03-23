@@ -26,6 +26,11 @@ void predictRepresentation_time_series(double *x, int segmentlen, int nsample, i
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, int *nodex, int maxdepth);
 		
+void predict_time_series(double *x, int segmentlen, int nsample, int mdim, 
+		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
+		double *split, int *splitVar, int *splitType, double *nodepred, 
+		int maxdepth, int target, double *prediction, int *targetcount);
+			
 void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample, 
 		   int ndstart, int ndend, int *msplit, double *decsplit, 
 		   double *ubest, int *ndendl, int *jstat, int mtry,
@@ -55,9 +60,9 @@ void Xtranslate(double *x, int mdim, int nrnodes, int nsample,
 		double *xbestsplit, int *nodestatus, int *cat, int treeSize);
 void permuteOOB(int m, double *x, int *in, int nsample, int mdim);
 void computeProximity(double *prox, int oobprox, int *node, int *inbag, 
-                      int *oobpair, int n); */
+                      int *oobpair, int n);
 
-/* Template of Fortran subroutines to be called from the C wrapper */
+//Template of Fortran subroutines to be called from the C wrapper 
 extern void F77_NAME(buildtree)(int *a, int *b, int *cl, int *cat, 
 				int *maxcat, int *mdim, int *nsample, 
 				int *nclass, int *treemap, int *bestvar, 
@@ -69,7 +74,8 @@ extern void F77_NAME(buildtree)(int *a, int *b, int *cl, int *cat,
 				int *, int *, int *, int *, int *, int *, 
 				double *, double *, double *,
 				int *, int *, int *); 
-
+*/
+ 
 /* Node status */
 #define NODE_TERMINAL -1
 #define NODE_TOSPLIT  -2
@@ -78,5 +84,8 @@ extern void F77_NAME(buildtree)(int *a, int *b, int *cl, int *cat,
 /* Input Type */
 #define OBS_SERIES 1
 #define DIFF_SERIES 2
+
+/* NA indicator*/
+#define NA_indicator -999
 
 #endif /* RF_H */
