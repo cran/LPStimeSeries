@@ -1,5 +1,5 @@
 Package: LPStimeSeries
-Version: 1.0-2
+Version: 1.0-3
 Date: 2014-03-23
 Title: Learned Pattern Similarity and Representation for Time Series
 Author: Learned Pattern Similarity (LPS) for time series by Mustafa Gokce Baydogan,
@@ -12,7 +12,7 @@ Description: Learned Pattern Similarity (LPS) for time series. This package is b
 	 compute the similarity.
 License: GPL (>= 2)
 URL: http://www.mustafabaydogan.com/learned-pattern-similarity-lps.html
-Packaged: 2014-03-23 17:45:11 UTC; baydogan
+Packaged: 2014-07-31 19:44:21 UTC; baydogan
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2014-03-23 19:04:55
+Date/Publication: 2014-08-01 01:30:34

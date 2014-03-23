@@ -34,6 +34,7 @@ getTreeInfo(object, which.tree=1)
   terminal}    
   \item{split point}{where the best split is}
   \item{status}{is the node terminal (-1) or not (-3)}
+  \item{depth}{the depth of the node}
   \item{prediction}{the prediction for the node}
      
 }

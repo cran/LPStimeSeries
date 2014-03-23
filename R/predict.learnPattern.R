@@ -1,5 +1,5 @@
 "predict.learnPattern" <-
-    function (object, newdata, which.tree=FALSE,
+    function (object, newdata, which.tree=NULL,
 				nodes=TRUE, maxdepth=NULL, ...)
 {
     if (!inherits(object, "learnPattern"))
@@ -42,13 +42,22 @@
     on.exit(options(op))
     x <- t(data.matrix(x))
 
+	if(!is.null(which.tree)){
+		if(length(which.tree)==0) stop("No trees are selected!")
+		usedtrees=array(0,object$ntree)
+		usedtrees[which.tree]=1
+	} else {
+		usedtrees=array(1,object$ntree)
+	}
+		
 	if (nodes){
 		keepIndex <- c("nodeRep","lenRep")
-		if(which.tree>0){
-			nodexts <- integer(ntest * object$forest$nrnodes)
+		if(!is.null(which.tree)){
+			nodexts <- integer(ntest * length(which.tree) * object$forest$nrnodes)
 		} else {
 			nodexts <- integer(ntest * object$forest$nrnodes * object$ntree )
-		}			
+		}
+			
 		ans <- .C("regForest_represent",  
 				as.double(x),
 				as.integer(ntest),
@@ -56,6 +65,7 @@
 				as.double(object$segment.length),
 				as.integer(mdim),
 				as.integer(object$ntree),
+				as.integer(usedtrees),
 				object$forest$leftDaughter,
 				object$forest$rightDaughter,
 				object$forest$nodestatus,
@@ -72,7 +82,8 @@
 				
 		res=t(matrix(ans$nodeRep[1:(ans$lenRep*ntest)], nrow=ans$lenRep))
 		
-	} else {
+	} else {	
+
 		keepIndex <- c("predicted","count")
 		ans <- .C("regForest_predict",  
 				as.double(x),
@@ -81,6 +92,7 @@
 				as.double(object$segment.length),
 				as.integer(mdim),
 				as.integer(object$ntree),
+				as.integer(usedtrees),
 				object$forest$leftDaughter,
 				object$forest$rightDaughter,
 				object$forest$nodestatus,

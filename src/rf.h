@@ -16,11 +16,14 @@
 
 // swap two integers 
 #define swapInt(a, b) ((a ^= b), (b ^= a), (a ^= b));
+#define ELEM_SWAP(a,b) { register double t=(a);(a)=(b);(b)=t; }
+
+double quick_select(double arr[], int n);
            
 void regTree_time_series(double *x, double *segfactor, int targetdiff, int segmentdiff, int maxdepth, 
 			int mdim, int nsample, int *lDaughter, int *rDaughter, double *upper, double *avnode, 
 			int *nodedepth, int *nodestatus, int *splitType, int nrnodes, int *treeSize, int nthsize, 
-			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat);
+			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat, int isRand);
 			
 void predictRepresentation_time_series(double *x, int segmentlen, int nsample, int mdim, 
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
@@ -29,13 +32,13 @@ void predictRepresentation_time_series(double *x, int segmentlen, int nsample, i
 void predict_time_series(double *x, int segmentlen, int nsample, int mdim, 
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, double *nodepred, 
-		int maxdepth, int target, double *prediction, int *targetcount);
-			
-void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample, 
-		   int ndstart, int ndend, int *msplit, double *decsplit, 
+		int maxdepth, int target, double *prediction, int *targetcount, int cumulative);
+					   
+void findSplit(double *x, int *jdex, double *y, int mdim, int nsample,
+		   int ndstart, int ndend, int *msplit, double *decsplit,
 		   double *ubest, int *ndendl, int *jstat, int mtry,
-		   double sumnode, int nodecnt, int *cat);
-
+		   double sumnode, int nodecnt, int *cat, int splitType);
+		   		   
 void zeroInt(int *x, int length);
 void zeroDouble(double *x, int length);
 

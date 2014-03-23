@@ -1,17 +1,19 @@
 "learnPattern.default" <-
     function(x,
-    	     segment.factor=c(0.1,0.9),
+    	     segment.factor=c(0.05,0.95), 
 	         random.seg=TRUE, target.diff=TRUE, segment.diff=TRUE, 
+	         random.split=0,
              ntree=200,
              mtry=1,
              replace=FALSE,
              sampsize = if (replace) ceiling(0.632*nrow(x)) else nrow(x),
              maxdepth = 6,
-             nodesize = 10,
+             nodesize = 5,
 	         do.trace=FALSE,
              keep.forest=TRUE,
              oob.pred=FALSE,
-             keep.inbag=FALSE, 
+             keep.errors=FALSE, 
+             keep.inbag=FALSE,   
              ...) {
 
 	
@@ -71,6 +73,7 @@
 	} else {
 		if(sampsize > n) stop("Sample size cannot be larger than number of time series")
 		keep.inbag <- TRUE
+		keep.errors <- TRUE
 	}
 		
 	if(random.seg){
@@ -82,6 +85,7 @@
 	rfout <- .C("regRF_time_series",
                     x,
                     as.double(segment.length),
+                    as.integer(random.split),
                     as.integer(target.diff),
 					as.integer(segment.diff),
                     as.integer(c(n, p)),
@@ -93,6 +97,7 @@
                     as.integer(ncat),
                     as.integer(do.trace),  
                     as.integer(oob.pred),  
+                    as.integer(keep.errors),  
                     target = integer(ntree),           
                     target.type = integer(ntree),   
                     ndbigtree = integer(ntree),
@@ -112,7 +117,9 @@
                        double(ntree) else double(1),
                     inbag = if (keep.inbag)
                        matrix(integer(n * ntree), n) else integer(1),
-                    PACKAGE="LPStimeSeries")[c(14:29)]
+                    errors = if (keep.errors)
+                       double(ntree) else double(1),
+                    PACKAGE="LPStimeSeries")[c(16:32)]
         ## Format the forest component, if present.
         if (keep.forest) {
             max.nodes <- max(rfout$ndbigtree)
@@ -140,6 +147,7 @@
 		
         out <- list(call = cl,
                     type = "regression",
+                    random.split = random.split,
 					segment.factor = segment.factor,
 					segment.length = segment.length,
 					nobs = floor(segment.length*p),
@@ -158,7 +166,8 @@
 					ooberrors= if (oob.pred)
                       rfout$ooberrors else NULL,                    
                     inbag = if (keep.inbag)
-                      matrix(rfout$inbag, nrow(rfout$inbag),ntree) else NULL)
+                      matrix(rfout$inbag, nrow(rfout$inbag),ntree) else NULL,
+					errors = if (keep.errors) rfout$errors else NULL)
                            
     class(out) <- "learnPattern"
     return(out)

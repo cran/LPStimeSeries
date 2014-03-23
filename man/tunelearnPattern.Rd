@@ -11,7 +11,7 @@
 }
 \usage{
 tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5, 
-   segmentlevels=c(0.25,0.5,0.75), 
+   segmentlevels=c(0.25,0.5,0.75), random.split=0,
    mindepth=4, maxdepth=8, depthstep=2, 
    ntreeTry=25, target.diff=TRUE, segment.diff=TRUE, ...) 
 }
@@ -24,6 +24,9 @@ tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5,
   \item{nfolds}{number of cross-validation folds for parameter evaluation.}
   \item{segmentlevels}{alternative segment level settings to be evaluated. Settings
   are provided as an array.}
+  \item{random.split}{Type of the split. If set to zero (0), splits are generated based on decrease in SSE in target segment
+	Setting of one (1) generates the split value randomly between max and min values. Setting of two (2) generates a kd-tree
+	type of split (i.e. median of the values at each node is chosen as the split).}
   \item{mindepth}{minimum depth level to be evaluated.}
   \item{maxdepth}{maximum depth level to be evaluated.}
   \item{depthstep}{step size to determine the depth levels between \code{mindepth}
@@ -45,6 +48,7 @@ tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5,
   \item{best.error}{the minimum cross-validation error rate obtained.}
   \item{best.seg}{the segment length level that provides the minimum cross-validation error.}
   \item{best.depth}{the depth level that provides the minimum cross-validation error.}
+  \item{random.split}{split type used for learning patterns.}
 }
 
 \references{

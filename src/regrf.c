@@ -15,31 +15,34 @@
 #include <R.h>
 #include "rf.h"
 
-void regRF_time_series(double *x, double *seglength, int *tardiff, int *segdiff, 
+void regRF_time_series(double *x, double *seglength, int *isRand, int *tardiff, int *segdiff, 
 		int *xdim, int *sampsize, int *nthsize, int *nrnodes, int *nTree, int *mtry, 
-		int *cat, int *jprint, int *oobpred, int *target, int *targetType, int *treeSize, 
+		int *cat, int *jprint, int *oobpred, int *treeErrors, int *target, int *targetType, int *treeSize, 
 		int *nodedepth, int *nodestatus, int *splitType, int *lDaughter, int *rDaughter, 
 		double *avnode, int *mbest, double *upper, int *keepf, int *replace, double *oobpredictions,
-		double *ooberrors, int *inbag) {
+		double *ooberrors, int *inbag, double *errorTree) {
 
-    double  *xb, xrand, temp;
+    double  *xb, *predictions, xrand, temp;
     int *in, *targetcount, k, m, n, j, nsample, idx, mdim;
-    int segmentlength, keepF, keepInbag, maxdepth, oobcount=0;
-	
+    int segmentlength, keepF, keepInbag, maxdepth, oobcount=0,oobcount2=0, oobcountperTree;
+
     nsample = xdim[0];    		//number of series
     mdim = xdim[1];	      		//length series
     keepF = keepf[0];     		//keep forest
     keepInbag = keepf[1]; 		//keep inbag data
-    maxdepth=log2(*nrnodes);	//maximum depth
-
+    maxdepth=log2(*nrnodes+1);	//maximum depth
     
     GetRNGstate();
-
+	
 	if (*replace) { /* sample */		
 		xb = (double *) Calloc(mdim*(*sampsize), double); //inbag x info
 		in = (int *) Calloc(nsample, int);
 		targetcount = (int *) Calloc(mdim*nsample, int);
 		zeroInt(targetcount, mdim*nsample);
+		predictions = (double *) Calloc(mdim*nsample, double);
+	} else if (*treeErrors) {
+		targetcount = (int *) Calloc(mdim, int);
+		predictions = (double *) Calloc(mdim*nsample, double); 
 	}
     /*************************************
      * Start the loop over trees.
@@ -50,6 +53,7 @@ void regRF_time_series(double *x, double *seglength, int *tardiff, int *segdiff,
 		/* Draw a random sample for growing a tree. */
 		if (*replace) { /* sample */		
 			zeroInt(in, nsample);
+
 			for (n = 0; n < *sampsize; ++n) {
 				xrand = unif_rand();
 				k = xrand * nsample;
@@ -64,18 +68,29 @@ void regRF_time_series(double *x, double *seglength, int *tardiff, int *segdiff,
 			/* grow the regression tree */
 			regTree_time_series(xb, seglength + j, *tardiff, *segdiff, maxdepth, mdim, *sampsize, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodedepth + idx, nodestatus + idx, splitType + idx, *nrnodes,
-                treeSize + j, *nthsize, *mtry, mbest + idx, target + j, targetType + j, cat);
+                treeSize + j, *nthsize, *mtry, mbest + idx, target + j, targetType + j, cat, *isRand);
 			
 			if (*oobpred) {
 			//	Rprintf("Yalan\n");
 				segmentlength=(int) (mdim*seglength[j]);
-				oobcount=0;            
+				oobcount=0;    
+				errorTree[j]=0;  
+				ooberrors[j]=0;   
+				zeroDouble(predictions, mdim*nsample);
+				oobcount2=0; 
 				for (n = 0; n < nsample; ++n) {
 					if(in[n]==0){
 						predict_time_series(x + n*mdim, segmentlength, 1, mdim, lDaughter + idx, rDaughter + idx,
 							nodedepth + idx, nodestatus + idx, upper + idx, mbest + idx, splitType + idx,
-							avnode + idx, maxdepth, target[j], oobpredictions + n*mdim, targetcount + n*mdim); 			
-						//error adama sart			
+							avnode + idx, maxdepth, target[j], predictions + n*mdim, targetcount + n*mdim, 0); 			
+						 	 	
+						for (m = 0; m < mdim; ++m) {
+							if(m>=(target[j]-1)&&m<(target[j]+segmentlength-1)){		
+								errorTree[j]=errorTree[j]+pow(x[m+n*mdim]-predictions[m+n*mdim],2);
+								oobpredictions[m+n*mdim]=oobpredictions[m+n*mdim]+predictions[m+n*mdim];
+								oobcount2++;
+							}
+						}	
 					}
 					for (m = 0; m < mdim; ++m) {
 						if(targetcount[m+n*mdim]>0){
@@ -86,20 +101,44 @@ void regRF_time_series(double *x, double *seglength, int *tardiff, int *segdiff,
 					}	
 				}  
 				ooberrors[j]=ooberrors[j]/oobcount;   
+				errorTree[j]=errorTree[j]/oobcount2;
 			}
 					       
 		}  else { //use all data
+			
 			regTree_time_series(x, seglength + j, *tardiff, *segdiff, maxdepth, mdim, nsample, lDaughter + idx, rDaughter + idx,
                 upper + idx, avnode + idx, nodedepth + idx, nodestatus + idx, splitType + idx, *nrnodes,
-                treeSize + j, *nthsize, *mtry, mbest + idx, target + j, targetType + j, cat);
+                treeSize + j, *nthsize, *mtry, mbest + idx, target + j, targetType + j, cat, *isRand);
+           
+            if(*isRand==0&&*treeErrors) {
+				zeroInt(targetcount, mdim);	
+				zeroDouble(predictions, mdim*nsample);	
+				segmentlength=(int) (mdim*seglength[j]);
+				predict_time_series(x, segmentlength, nsample, mdim, lDaughter + idx, rDaughter + idx,
+						nodedepth + idx, nodestatus + idx, upper + idx, mbest + idx, splitType + idx,
+						avnode + idx, maxdepth, target[j], predictions, targetcount, 0);
+						
+				oobcount=0;  	 	
+				for (m = 0; m < mdim; ++m) {
+					if(targetcount[m]>0){
+						for (n = 0; n < nsample; ++n) {		
+							errorTree[j]=errorTree[j]+pow(x[m+n*mdim]-predictions[m+n*mdim],2);
+							oobcount++;
+						}
+					}
+				}	
+				errorTree[j]=errorTree[j]/oobcount; 
+			}
+
 		}                
-  
+		
         if(*jprint>0&&(j+1)%(*jprint)==0)
 			Rprintf("Tree %d over\n",j+1);
     }
+   //  Rprintf("Tree construction Elapsed: %f seconds\n", temp / CLOCKS_PER_SEC);
     PutRNGstate();
     /* end of tree iterations=======================================*/
-    
+
 	if (*replace) { /* free memory */
 	   if (*oobpred) {
 		   for (n = 0; n < nsample; ++n) {
@@ -115,11 +154,16 @@ void regRF_time_series(double *x, double *seglength, int *tardiff, int *segdiff,
        Free(xb);
        Free(in);
        Free(targetcount);
+       Free(predictions);
+	}
+	else if (*treeErrors) {
+	   Free(predictions);
+       Free(targetcount);
 	}
 }
 		
 void regForest_similarity(double *x, double *y, int *n, int *ny,
-			double *seglength, int *mdim, int *ntree, 
+			double *seglength, int *mdim, int *ntree, int *usedtrees, 
 			int *lDaughter, int *rDaughter, int *nodestatus, int *nodedepth,
 			int *nrnodes, double *xsplit, int *mbest, int *splitType, 
 			int *treeSize, int *maxdepth, int *similarity) {
@@ -138,32 +182,37 @@ void regForest_similarity(double *x, double *y, int *n, int *ny,
     zeroInt(similarity, (*ny) * (*n));
 	idx1 = 0;
 	for (i = 0; i < *ntree; i++) {
-		segmentlength=(int) (*mdim*seglength[i]);
-		
-		zeroInt(noderef, totx);
-		zeroInt(nodetest, totxtst);
-		zeroInt(tempnodestatus, *nrnodes);
-		
-		// based on the maxdepth setting identify terminal nodes
-		for (k = 0; k < *nrnodes; k++) {
-			if(nodedepth[idx1+k]==*maxdepth || nodestatus[idx1+k]==NODE_TERMINAL){
-				tempnodestatus[k]=NODE_TERMINAL;
-			}
-		}
-		
-		predictRepresentation_time_series(x, segmentlength, *n, *mdim, lDaughter + idx1, rDaughter + idx1,
-				nodedepth + idx1, nodestatus + idx1, xsplit + idx1, mbest + idx1, splitType + idx1, noderef, *maxdepth);
-		predictRepresentation_time_series(y, segmentlength, *ny, *mdim, lDaughter + idx1, rDaughter + idx1,
-				nodedepth + idx1, nodestatus + idx1, xsplit + idx1, mbest + idx1, splitType + idx1, nodetest, *maxdepth); 
-
-		for (k = 0; k < *nrnodes; k++) {
-			if(tempnodestatus[k]==NODE_TERMINAL){ 
-				for(j = 0; j < (*ny); j++){	
-					for(m = 0; m < (*n); m++){
-						similarity[j+(*ny)*m]=similarity[j+(*ny)*m]+abs(noderef[(*n)*k+m]-nodetest[(*ny)*k+j]);
-					}
+		if(usedtrees[i]==1) {
+			segmentlength=(int) (*mdim*seglength[i]);
+					
+			zeroInt(noderef, totx);
+			zeroInt(nodetest, totxtst);
+			zeroInt(tempnodestatus, *nrnodes);
+			
+			// based on the maxdepth setting identify terminal nodes
+			for (k = 0; k < *nrnodes; k++) {
+				if(nodedepth[idx1+k]==*maxdepth) {
+					tempnodestatus[k]=NODE_TERMINAL;
+				}
+				else if(nodestatus[idx1+k]==NODE_TERMINAL){
+					tempnodestatus[k]=NODE_TERMINAL;
 				}
 			}
+						
+			predictRepresentation_time_series(x, segmentlength, *n, *mdim, lDaughter + idx1, rDaughter + idx1,
+					nodedepth + idx1, tempnodestatus, xsplit + idx1, mbest + idx1, splitType + idx1, noderef, *maxdepth);
+			predictRepresentation_time_series(y, segmentlength, *ny, *mdim, lDaughter + idx1, rDaughter + idx1,
+					nodedepth + idx1, tempnodestatus, xsplit + idx1, mbest + idx1, splitType + idx1, nodetest, *maxdepth); 
+
+			for (k = 0; k < *nrnodes; k++) {
+				if(tempnodestatus[k]==NODE_TERMINAL){ 
+					for(j = 0; j < (*ny); j++){	
+						for(m = 0; m < (*n); m++){
+							similarity[j+(*ny)*m]=similarity[j+(*ny)*m]+abs(noderef[(*n)*k+m]-nodetest[(*ny)*k+j]);
+						}
+					}
+				}
+		   }
 	   }
 	   idx1 += *nrnodes; 
 	}	
@@ -174,7 +223,7 @@ void regForest_similarity(double *x, double *y, int *n, int *ny,
 }
 
 void regForest_represent(double *x, int *n, int *whichtree,
-			double *seglength, int *mdim, int *ntree, 
+			double *seglength, int *mdim, int *ntree, int *usedtrees, 
 			int *lDaughter, int *rDaughter, int *nodestatus, int *nodedepth,
 			int *nrnodes, double *xsplit, int *mbest, int *splitType, 
 			int *treeSize, int *maxdepth, int *representation, int *repLength) {
@@ -183,58 +232,60 @@ void regForest_represent(double *x, int *n, int *whichtree,
     int *noderef, *tempnodestatus, segmentlength, totx;
 
 	totx=(*n)*(*nrnodes);
-	
-	if(*whichtree>0){ //single tree
-		startind=*whichtree-1;
-		endind=startind+1;
-		idx1=*nrnodes*(*whichtree-1);
-	}
-	else {	//ensemble
-		startind=0;
-		endind=*ntree;
-		idx1 = 0;	
-	}
-	
+	idx1 = 0;
 	// compute the size of the representation  by computing 
 	// the total number of terminal nodes (termnodecount) over trees
 	tempidx = idx1;
 	termnodecount = 0;
-	for (i = startind; i < endind; i++) {
-		for (k = 0; k < *nrnodes; k++) {
-			if(nodedepth[tempidx+k]==*maxdepth || nodestatus[tempidx+k]==NODE_TERMINAL)
-				termnodecount++;
-		}	
+	for (i = 0; i < *ntree; i++) {
+		if(usedtrees[i]==1) {
+			for (k = 0; k < *nrnodes; k++) {
+				if(nodedepth[tempidx+k]==*maxdepth) {
+					termnodecount++;
+				}
+				else if(nodedepth[tempidx+k]<=*maxdepth&&nodestatus[tempidx+k]==NODE_TERMINAL){
+					termnodecount++;
+				}
+			}	
+		//	Rprintf("Tree %d, term node count %d\n",i+1,termnodecount);
+		}
 		tempidx += *nrnodes; 
 	}
 	*repLength = termnodecount;
+	
 	
     noderef = (int *) Calloc(totx, int);	
     tempnodestatus = (int *) Calloc(*nrnodes, int);
     
 	nodecount=0;
-	for (i = startind; i < endind; i++) {
-		segmentlength=(int) (*mdim*seglength[i]);
-		zeroInt(noderef, totx);
-		zeroInt(tempnodestatus, *nrnodes);
-		
-		// based on the maxdepth setting identify terminal nodes
-		for (k = 0; k < *nrnodes; k++) {
-			if(nodedepth[idx1+k]==*maxdepth || nodestatus[idx1+k]==NODE_TERMINAL){
-				tempnodestatus[k]=NODE_TERMINAL;
-			}
-		}
-		predictRepresentation_time_series(x, segmentlength, *n, *mdim, lDaughter + idx1, rDaughter + idx1,
-				nodedepth + idx1, nodestatus + idx1, xsplit + idx1, mbest + idx1, splitType + idx1,
-				noderef, *maxdepth);
-		
-
-		for (k = 0; k < *nrnodes; k++) {
-			if(tempnodestatus[k]==NODE_TERMINAL){ 
-				for(m = 0; m < (*n); m++){
-					representation[termnodecount*m+nodecount]=noderef[(*n)*k+m];
+	for (i = 0; i < *ntree; i++) {
+		if(usedtrees[i]==1) {
+			segmentlength=(int) (*mdim*seglength[i]);
+			zeroInt(noderef, totx);
+			zeroInt(tempnodestatus, *nrnodes);
+			
+			// based on the maxdepth setting identify terminal nodes
+			for (k = 0; k < *nrnodes; k++) {
+				if(nodedepth[idx1+k]==*maxdepth) {
+					tempnodestatus[k]=NODE_TERMINAL;
 				}
-				nodecount++;
+				else if(nodedepth[idx1+k]<=*maxdepth&&nodestatus[idx1+k]==NODE_TERMINAL){
+					tempnodestatus[k]=NODE_TERMINAL;
+				}
 			}
+			predictRepresentation_time_series(x, segmentlength, *n, *mdim, lDaughter + idx1, rDaughter + idx1,
+					nodedepth + idx1, tempnodestatus, xsplit + idx1, mbest + idx1, splitType + idx1,
+					noderef, *maxdepth);
+			
+
+			for (k = 0; k < *nrnodes; k++) {
+				if(tempnodestatus[k]==NODE_TERMINAL){ 
+					for(m = 0; m < (*n); m++){
+						representation[termnodecount*m+nodecount]=noderef[(*n)*k+m];
+					}
+					nodecount++;
+				}
+		   }
 	   }
 	   idx1 += *nrnodes; 
 	}	
@@ -244,7 +295,7 @@ void regForest_represent(double *x, int *n, int *whichtree,
 }
 
 void regForest_predict(double *x, int *n, int *whichtree,
-			double *seglength, int *mdim, int *ntree, 
+			double *seglength, int *mdim, int *ntree, int *usedtrees, 
 			int *lDaughter, int *rDaughter, int *nodestatus, int *nodedepth,
 			int *nrnodes, double *xsplit, int *mbest, int *splitType, 
 			double *nodepred, int *treeSize, int *target, int *maxdepth, 
@@ -253,27 +304,18 @@ void regForest_predict(double *x, int *n, int *whichtree,
 	int i, j, idx1, startind, endind;
     int segmentlength;
 
-	if(*whichtree>0){ //single tree
-		startind=*whichtree-1;
-		endind=startind+1;
-		idx1=*nrnodes*(*whichtree-1);
-	}
-	else {	//ensemble
-		startind=0;
-		endind=*ntree;
-		idx1 = 0;	
-	}
-	
+
+	idx1 = 0;	
 	zeroDouble(prediction,(*n)*(*mdim));
 	zeroInt(targetcount,(*mdim));
 	
-	for (i = startind; i < endind; i++) {
-		segmentlength=(int) (*mdim*seglength[i]);
-
-		predict_time_series(x, segmentlength, *n, *mdim, lDaughter + idx1, rDaughter + idx1,
-				nodedepth + idx1, nodestatus + idx1, xsplit + idx1, mbest + idx1, splitType + idx1,
-				nodepred + idx1, *maxdepth, target[i], prediction, targetcount);
-			
+	for (i = 0; i < *ntree; i++) {
+		if(usedtrees[i]==1) {
+			segmentlength=(int) (*mdim*seglength[i]);
+			predict_time_series(x, segmentlength, *n, *mdim, lDaughter + idx1, rDaughter + idx1,
+					nodedepth + idx1, nodestatus + idx1, xsplit + idx1, mbest + idx1, splitType + idx1,
+					nodepred + idx1, *maxdepth, target[i], prediction, targetcount, 1);
+	   }		
 	   idx1 += *nrnodes; 
 	}	
 
@@ -369,63 +411,7 @@ void regForest_pattern(double *x, int *n, int *whichtree,
 /*************************************
  * Codes to use for future development
 *************************************/
-
 /*
-void regForest_represent(double *x, double *seglength, int *mdim, int *n,
-               int *ntree, int *lDaughter, int *rDaughter,
-               int *nodestatus, int *nrnodes, int *nrterminalnodes, double *xsplit, 
-               int *mbest, int *treeSize, int *max_depth, int *representation) {
-				   		                    
-    int i, j, k, m, idx1, cnt;
-    int *noderef, *tempnodestatus, totx;
-
-	totx=(*n)*(*nrnodes);
-    noderef = (int *) Calloc(totx, int);	
-    tempnodestatus = (int *) Calloc(*nrnodes, int);
-
-	if(*ntree<0){
-		zeroInt(representation, (*n));
-		idx1 = 0;
-		for (i = 0; i < -(*ntree); i++) {
-			zeroInt(noderef, totx);
-			zeroInt(tempnodestatus, *nrnodes);
-			predictRepresentation_time_series(x, seglength[i], *n, *mdim, lDaughter + idx1, rDaughter + idx1,
-					nodestatus + idx1, xsplit + idx1, mbest + idx1, treeSize[i],
-					noderef, *max_depth, tempnodestatus);		
-			cnt=0;
-			for(k=0;k<*nrnodes;k++){
-				if(tempnodestatus[k]==NODE_TERMINAL){ 
-					for(m=0;m<*n;m++){
-						representation[cnt++]=noderef[(*n)*k+m];
-					}
-				}
-			}
-			idx1 += *nrnodes; 
-		}	
-	} else {
-		zeroInt(representation, (*n));
-		i=*ntree-1;
-		idx1 = *nrnodes*i;
-		zeroInt(noderef, totx);
-		zeroInt(tempnodestatus, *nrnodes);
-		predictRepresentation_time_series(x, seglength[i], *n, *mdim, lDaughter + idx1, rDaughter + idx1,
-				nodestatus + idx1, xsplit + idx1, mbest + idx1, treeSize[i],
-				noderef, *max_depth, tempnodestatus);		
-		cnt=0;
-		for(k=0;k<*nrnodes;k++){
-			if(tempnodestatus[k]==NODE_TERMINAL){ 
-				for(m=0;m<*n;m++){
-					representation[cnt++]=noderef[(*n)*k+m];
-				}
-			}
-		}
-		idx1 += *nrnodes; 
-	}
-
-	Free(noderef);
-	Free(tempnodestatus);
-}
-
 void regForest_findNN(double *x, double *y, int *n, int *ny,
 			double *seglength, int *mdim, int *ntree, 
 			int *lDaughter, int *rDaughter, int *nodestatus, int *nodedepth,

@@ -41,6 +41,11 @@ plotMDS(ensemble, GunPoint$trainseries,GunPoint$trainclass)
 ## Using different symbols for the classes:
 plotMDS(ensemble, GunPoint$trainseries,GunPoint$trainclass, 
          palette=rep(1, 2), pch=as.numeric(GunPoint$trainclass))
+         
+## Learn patterns on GunPoint training series with random splits
+ensemble=learnPattern(GunPoint$trainseries,random.split=1)
+plotMDS(ensemble, GunPoint$trainseries,GunPoint$trainclass,main='Random Splits')
+
 }
 \author{Mustafa Gokce Baydogan}
 \keyword{similarity}

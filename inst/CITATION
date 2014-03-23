@@ -3,13 +3,12 @@ citHeader("To cite LPStimeSeries in publications use:")
 	 citEntry(entry="Article",
          title  = "Time Series Similarity Based on a Pattern-based Representation",
          author = personList(person(last="Baydogan", first="Mustafa", middle="Gokce"),
-	                         person(last="Runger", first="George"),
-	                         person(last="Yamak", first="Didem")),
+	                         person(last="Runger", first="George")),
 		journal = "submitted for publication",
         year    = "2013",      	 
         
         textVersion = 
-        paste("M. G. Baydogan, G. Runger and D. Yamak (2013). ", 
+        paste("M. G. Baydogan and G. Runger (2013). ", 
                "Time Series Similarity Based on a Pattern-based Representation. ",
                "submitted for publication",
                sep=""))

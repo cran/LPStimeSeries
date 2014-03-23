@@ -10,17 +10,19 @@
 }
 \usage{
 \method{learnPattern}{default}(x,
-   segment.factor=c(0.1,0.9),
+   segment.factor=c(0.05,0.95),
    random.seg=TRUE, target.diff=TRUE, segment.diff=TRUE, 
+   random.split=0,
    ntree=200,
    mtry=1,
    replace=FALSE,
    sampsize=if (replace) ceiling(0.632*nrow(x)) else nrow(x),
    maxdepth=6,
-   nodesize=10,
+   nodesize=5,
    do.trace=FALSE,
    keep.forest=TRUE,
    oob.pred=FALSE,
+   keep.errors=FALSE, 
    keep.inbag=FALSE, ...)
 \method{print}{learnPattern}(x, ...)
 }
@@ -34,8 +36,11 @@
 	defined by \code{segment.factor}}
   \item{target.diff}{Can target segment be a difference feature?}
   \item{segment.diff}{Can predictor segments be difference feature?}
+  \item{random.split}{Type of the split. If set to zero (0), splits are generated based on decrease in SSE in target segment
+	Setting of one (1) generates the split value randomly between max and min values. Setting of two (2) generates a kd-tree
+	type of split (i.e. median of the values at each node is chosen as the split).}
   \item{ntree}{Number of trees to grow.  Larger number of trees are preferred
-    	if there is no concern regarding the computation time; }
+    	if there is no concern regarding the computation time.}
   \item{mtry}{Number of predictor segments randomly sampled as candidates at each
    	split.  Note that it is preset to 1 for now.}
   \item{replace}{Should bagging of time series be done with replacement? All training time series are used
@@ -51,7 +56,9 @@
   \item{keep.forest}{If set to \code{FALSE}, the forest will not be
     retained in the output object. }
   \item{oob.pred}{if replace is set to \code{TRUE}, predictions for the time
-     series observations are returned. }    
+     series observations are returned. }   
+  \item{keep.errors}{If set to \code{TRUE}, the mean square error (MSE) of target prediction over target segments is evaluated
+   for each tree. If \code{oob.pred=TRUE}, this information is evaluated on ``out-of-bag'' samples at each tree. }
   \item{keep.inbag}{Should an \code{n} by \code{ntree} matrix be
     returned that keeps track of which samples are ``in-bag'' in which
     trees}
@@ -79,8 +86,12 @@
     \code{keep.forest=FALSE}.}
   \item{oobprediction}{predicted observations based on ``out-of-bag'' time series 
     are returned if \code{oob.pred=TRUE}}
+  \item{ooberrors}{Mean square error (MSE) over the trees evaluated using the predicted 
+  observations on ``out-of-bag'' time series is returned if \code{oob.pred=TRUE}. }
   \item{inbag}{\code{n} by \code{ntree} matrix be returned that keeps track of 
     which samples are ``in-bag'' in which trees if \code{keep.inbag=TRUE}}
+  \item{errors}{Mean square error (MSE) of target prediction over target segments
+   for each tree. If \code{oob.pred=TRUE}, Mean square error (MSE) is reported based on ``out-of-bag'' samples at each tree.}
 }
 \note{
   OOB predictions may have missing values (i.e. \code{NA}) if time series is not
@@ -120,6 +131,16 @@ NearestNeighbor=apply(similarity,1,which.min)
 predicted=GunPoint$trainclass[NearestNeighbor]
 
 ## Compute the percentage of accurate predictions
+accuracy=sum(predicted==GunPoint$testclass)/nrow(GunPoint$testseries)
+print(100*accuracy)
+
+## Learn patterns randomly on GunPoint training series with default parameters
+ensemble=learnPattern(GunPoint$trainseries, random.split=1)
+
+## Find the similarity between test and training series and classify test series
+similarity=computeSimilarity(ensemble,GunPoint$testseries,GunPoint$trainseries)
+NearestNeighbor=apply(similarity,1,which.min)
+predicted=GunPoint$trainclass[NearestNeighbor]
 accuracy=sum(predicted==GunPoint$testclass)/nrow(GunPoint$testseries)
 print(100*accuracy)
 

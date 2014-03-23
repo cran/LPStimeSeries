@@ -1,4 +1,4 @@
-tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.25,0.5,0.75), 
+tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.25,0.5,0.75), random.split=0, 
 						mindepth=4, maxdepth=8, depthstep=2, ntreeTry=25, target.diff=TRUE, segment.diff=TRUE, ...) {
 
 	ndepthlev <- 1+(maxdepth-mindepth)/depthstep
@@ -24,11 +24,11 @@ tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.
 		cnt <- 1
 		for(l in 1:length(segmentlevels)){
 			if(!is.null(unlabeledx)){
-				ensemble <- learnPattern(rbind(x[trainind,],unlabeledx),segment.factor=segmentlevels[l],random.seg=FALSE,
-					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,replace=FALSE,maxdepth=maxdepth)	
+				ensemble <- learnPattern(rbind(x[trainind,],unlabeledx),segment.factor=segmentlevels[l],random.seg=random.split,
+					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,maxdepth=maxdepth)	
 			} else {
-				ensemble <- learnPattern(x[trainind,],segment.factor=segmentlevels[l],random.seg=FALSE,
-					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,replace=FALSE,maxdepth=maxdepth)		
+				ensemble <- learnPattern(x[trainind,],segment.factor=segmentlevels[l],random.split=random.split,
+					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,maxdepth=maxdepth)		
 			}
 			
 			tempdepth <- mindepth
@@ -61,5 +61,5 @@ tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.
 	best_seg <- param_combination[minindex[1],1]
 			
 	res <- list(params=param_combination,errors=error_rates,
-				best.error=min(avg_error),best.seg=best_seg,best.depth=best_depth)   	
+				best.error=min(avg_error),best.seg=best_seg,best.depth=best_depth,random.split=random.split)   	
 }

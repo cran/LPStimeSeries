@@ -10,7 +10,7 @@
 }
 \usage{
 computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
-   maxdepth=NULL, terminal=TRUE,testrepresentation,refrepresentation)
+   maxdepth=NULL,which.tree=NULL,terminal=TRUE,testrepresentation,refrepresentation)
 }
 \arguments{
   \item{object}{an object of class \code{learnPattern}.}
@@ -18,6 +18,7 @@ computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
   \item{testseries}{test time series.}
   \item{maxdepth}{maximum depth level to be used to generate representations
   for similarity computations.}
+  \item{which.tree}{array of trees to be used for similarity computation.}
   \item{terminal}{\code{TRUE} if similarity is computed over the learned representations.}
   \item{testrepresentation}{learned representation for test time series.}
   \item{refrepresentation}{learned representation for reference time series.}
@@ -63,6 +64,10 @@ testRep=predict(ensemble, GunPoint$testseries, nodes=TRUE)
 ## Then compute the similarity (city-block distance), 
 ## takes longer but we keep the representation
 sim2=computeSimilarity(testrepresentation=testRep,refrepresentation=trainRep)
+
+## Find the similarity based on first 100 trees
+sim=computeSimilarity(ensemble,GunPoint$testseries,GunPoint$trainseries,which.tree=c(1:100))
+
 
 }
 \author{Mustafa Gokce Baydogan}

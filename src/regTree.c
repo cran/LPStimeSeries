@@ -29,25 +29,23 @@
 #include <Rmath.h>
 #include <R.h>
 #include "rf.h"
+#include <time.h>
 
-/*--------------------------------------------------------------*/
-void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
+void findSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 		   int ndstart, int ndend, int *msplit, double *decsplit,
 		   double *ubest, int *ndendl, int *jstat, int mtry,
-		   double sumnode, int nodecnt, int *cat) {
+		   double sumnode, int nodecnt, int *cat, int splitType) {
     int last, lc, nl, nr, npopl, npopr;
-    int i, j, kv, *mind, *ncase;
-    double *xt, *ut, *v, *yl, avcat[32], tavcat[32], ubestt;
+    int i, j, kv, *mind, *ncase, step;
+    double *xt, *v, *yl, ubestt,curmin, curmax;; 
     double crit, critmax, critvar, suml, sumr, d, critParent;
-
-    ut = (double *) Calloc(nsample, double);
+	double impratio=1;
+	
     xt = (double *) Calloc(nsample, double);
     v  = (double *) Calloc(nsample, double);
     yl = (double *) Calloc(nsample, double);
     mind  = (int *) Calloc(mdim, int);
     ncase = (int *) Calloc(nsample, int);
-    zeroDouble(avcat, 32);
-    zeroDouble(tavcat, 32);
 
     /* START BIG LOOP */
     *msplit = -1;
@@ -74,43 +72,59 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 		}
 		
         /* copy the x data in this node. */
-		for (j = ndstart; j <= ndend; ++j) v[j] = xt[j];
+		curmin=xt[ndstart];
+        curmax=xt[ndstart];
+		for (j = ndstart; j <= ndend; ++j){
+			v[j] = xt[j];
+			if(curmin>xt[j]) curmin=xt[j];
+			if(curmax<xt[j]) curmax=xt[j];
+		}
 		for (j = 1; j <= nsample; ++j) ncase[j - 1] = j;
-		R_qsort_I(v, ncase, ndstart + 1, ndend + 1);
-		if (v[ndstart] >= v[ndend]) continue;
-		/* ncase(n)=case number of v nth from bottom */
-		/* Start from the right and search to the left. */
-		critParent = sumnode * sumnode / nodecnt;
-		suml = 0.0;
-		sumr = sumnode;
-		npopl = 0;
-		npopr = nodecnt;
-		crit = 0.0;
-		/* Search through the "gaps" in the x-variable. */
-		for (j = ndstart; j <= ndend - 1; ++j) {
-			d = yl[ncase[j] - 1];
-			suml += d;
-			sumr -= d;
-			npopl++;
-			npopr--;
-			if (v[j] < v[j+1]) {
-				crit = (suml * suml / npopl) + (sumr * sumr / npopr) -
-					critParent;
-				if (crit > critvar) {
-					ubestt = (v[j] + v[j+1]) / 2.0;
-					critvar = crit;
+		
+		if (splitType==1) { //random splits
+			if (curmin >= curmax) continue;
+			*ubest = unif_rand()*(curmax-curmin)+curmin;
+			*msplit = kv + 1;
+			critmax = 1;
+	
+		} else if(splitType==2){ //kd-tree
+			if (curmin >= curmax) continue;
+			*ubest=quick_select(v, ndend-ndstart+1);
+			*msplit = kv + 1;
+			critmax = 1;
+		}
+		else { //regression splits
+			R_qsort_I(v, ncase, ndstart + 1, ndend + 1);
+			if (v[ndstart] >= v[ndend]) continue;
+			/* ncase(n)=case number of v nth from bottom */
+			/* Start from the right and search to the left. */
+			critParent = sumnode * sumnode / nodecnt;
+			suml = 0.0;
+			sumr = sumnode;
+			npopl = 0;
+			npopr = nodecnt;
+			crit = 0.0;
+			/* Search through the "gaps" in the x-variable. */
+			for (j = ndstart; j <= ndend - 1; ++j) {
+				d = yl[ncase[j] - 1];
+				suml += d;
+				sumr -= d;
+				npopl++;
+				npopr--;
+
+				if (v[j] < v[j+1]) {
+					crit = (suml * suml / npopl) + (sumr * sumr / npopr) -
+						critParent;
+					if (crit > critvar) {
+						ubestt = (v[j] + v[j+1]) / 2.0;
+						critvar = crit;
+					}
 				}
 			}
-		}
-		if (critvar > critmax) {
-			*ubest = ubestt;
-			*msplit = kv + 1;
-			critmax = critvar;
-			for (j = ndstart; j <= ndend; ++j) {
-				ut[j] = xt[j];
-			}
-			if (cat[kv] > 1) {
-				for (j = 0; j < cat[kv]; ++j) tavcat[j] = avcat[j];
+			if (critvar > critmax) {
+				*ubest = ubestt;
+				*msplit = kv + 1;
+				critmax = critvar;
 			}
 		}
     }
@@ -120,7 +134,7 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     if (*msplit != -1) {
         nl = ndstart;
         for (j = ndstart; j <= ndend; ++j) {
-            if (ut[j] <= *ubest) {
+            if (xt[j] <= *ubest) {
                 nl++;
                 ncase[nl-1] = jdex[j];
             }
@@ -128,7 +142,7 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
         *ndendl = imax2(nl - 1, ndstart);
         nr = *ndendl + 1;
         for (j = ndstart; j <= ndend; ++j) {
-            if (ut[j] > *ubest) {
+            if (xt[j] > *ubest) {
                 if (nr >= nsample) break;
                 nr++;
                 ncase[nr - 1] = jdex[j];
@@ -144,18 +158,19 @@ void findBestSplit(double *x, int *jdex, double *y, int mdim, int nsample,
     Free(v);
     Free(yl);
     Free(xt);
-    Free(ut);
+
 }
-                
+
+
 void regTree_time_series(double *x, double *segfactor, int targetdiff, int segmentdiff, int maxdepth, 
 			int mdim, int nsample, int *lDaughter, int *rDaughter, double *upper, double *avnode, 
 			int *nodedepth, int *nodestatus, int *splitType, int nrnodes, int *treeSize, int nthsize, 
-			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat) {
+			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat, int isRand) {
 			 
     int i, j, k, m, ncur, *jdex, *nodestart, *nodepop, nofsampleobs, segmentlen, cur_target, cur_x;
     int ndstart, ndend, ndendl, nodecnt, jstat, msplit, cnt, totalnodes, sel, add, rotate;
-    double d, ss, av, decsplit, ubest, sumnode, *y, *obsx, rndm;
-
+    double d, ss, av, decsplit, ubest, sumnode, *y, *obsx, rndm, temp=0;
+	clock_t tic, toc;
 	segmentlen = (int) (*segfactor * mdim);
 	nofsampleobs = segmentlen * nsample;
 	
@@ -174,7 +189,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 	    if(rotate<1){
 			cur_target=(int) (unif_rand()*(mdim-segmentlen)); //unequal observation probabilities
 		} else {
-			cur_target=(int) (unif_rand()*(mdim-1)); //unequal observation probabilities
+			cur_target=(int) (unif_rand()*(mdim-1));
 		}
 		*currentTargetType=DIFF_SERIES;
    } else {	   
@@ -236,12 +251,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 		if (k > ncur || ncur >= nrnodes - 2) break;
 		/* skip if the node is not to be split */
 		if (nodestatus[k] != NODE_TOSPLIT) continue;
-
-		if (nodedepth[k]==maxdepth && nodestatus[k] == NODE_TOSPLIT) {
-			nodestatus[k] = NODE_TERMINAL;
-			continue;
-		} 
-		
+	
 		/* initialize for next call to findbestsplit */
 		ndstart = nodestart[k];
 		ndend = ndstart + nodepop[k] - 1;
@@ -250,6 +260,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 		jstat = 0;
 		decsplit = 0.0;
 
+	//	tic = clock();
 	    // select predictor segment (should be different than target segment)
 	    cur_x=cur_target;
 	    rndm=unif_rand();
@@ -257,16 +268,16 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 	    while(cur_x == cur_target && *currentTargetType==splitType[k]) {
 			if(segmentdiff==1 && rndm<0.5) {
 				if(rotate<1){
-					cur_x=(int) (unif_rand()*(mdim-segmentlen)); //unequal observation probabilities
+					cur_x=(int) (unif_rand()*(mdim-segmentlen)); //inequal observation probabilities
 				} else {
-					cur_x=(int) (unif_rand()*(mdim-1)); //unequal observation probabilities
+					cur_x=(int) (unif_rand()*(mdim-1)); //inequal observation probabilities
 				}
 				splitType[k]=DIFF_SERIES;
 			} else {	   
 				if(rotate<1){
-					cur_x=(int) (unif_rand()*(mdim-segmentlen+1)); //unequal observation probabilities
+					cur_x=(int) (unif_rand()*(mdim-segmentlen+1)); //inequal observation probabilities
 				} else {
-					cur_x=(int) (unif_rand()*mdim); //unequal observation probabilities
+					cur_x=(int) (unif_rand()*mdim); //inequal observation probabilities
 				}
 				splitType[k]=OBS_SERIES;
 			}
@@ -288,11 +299,11 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 				}
 			}
 		}
-
-		findBestSplit(obsx, jdex, y, 1, nofsampleobs, ndstart, ndend, &msplit,
+       
+		findSplit(obsx, jdex, y, 1, nofsampleobs, ndstart, ndend, &msplit,
                       &decsplit, &ubest, &ndendl, &jstat, mtry, sumnode,
-                      nodecnt, cat);
-                 	
+                      nodecnt, cat, isRand);             
+                      	
 		if (jstat == 1) {
 			/* Node is terminal: Mark it as such and move on to the next. */
 			nodestatus[k] = NODE_TERMINAL;
@@ -324,7 +335,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 		}
 		avnode[ncur+1] = av;
 		nodestatus[ncur+1] = NODE_TOSPLIT;
-		if (nodepop[ncur + 1] <= nthsize) {
+		if (nodepop[ncur + 1] <= nthsize || nodedepth[ncur + 1]>=maxdepth) {
 			nodestatus[ncur + 1] = NODE_TERMINAL;
 		}
 
@@ -339,7 +350,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 		}
 		avnode[ncur + 2] = av;
 		nodestatus[ncur + 2] = NODE_TOSPLIT;
-		if (nodepop[ncur + 2] <= nthsize) {
+		if (nodepop[ncur + 2] <= nthsize || nodedepth[ncur + 2]>=maxdepth) {
 			nodestatus[ncur + 2] = NODE_TERMINAL;
 		}
 		
@@ -360,6 +371,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
     }
     *treeSize=totalnodes;
     
+ //   Rprintf("Segment selection -> Elapsed: %f seconds\n", temp / CLOCKS_PER_SEC);
     Free(nodestart);
     Free(jdex);
     Free(nodepop);
@@ -405,7 +417,7 @@ void predictRepresentation_time_series(double *x, int segmentlen, int nsample, i
 void predict_time_series(double *x, int segmentlen, int nsample, int mdim, 
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, double *nodepred, 
-		int maxdepth, int target, double *prediction, int *targetcount) {
+		int maxdepth, int target, double *prediction, int *targetcount, int cumulative) {
 						
     int i, j, k, m, t;
     
@@ -438,15 +450,22 @@ void predict_time_series(double *x, int segmentlen, int nsample, int mdim,
 					}				
 				}
 			}
-			if(t+j>mdim-1){
-				prediction[t+j-mdim+i*mdim] += nodepred[k];
+			if(cumulative){
+				if(t+j>mdim-1){
+					prediction[t+j-mdim+i*mdim] += nodepred[k];
+				} else {
+					prediction[t+j+i*mdim] += nodepred[k];
+				}	
 			} else {
-				prediction[t+j+i*mdim] += nodepred[k];
-			}				
+				if(t+j>mdim-1){
+					prediction[t+j-mdim+i*mdim] = nodepred[k];
+				} else {
+					prediction[t+j+i*mdim] = nodepred[k];
+				}					
+			}		
 		}
 	}
 }
-
 
     /*************************************
      * Codes to use for future development

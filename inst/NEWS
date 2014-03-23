@@ -1,5 +1,11 @@
 TODO:
 
+* Current implementation grows full tree based on the minimum number of
+  observations per tree leaf setting and generates representation based on
+  the maximum depth which is not reasonable computationally. Depth level
+  is planned to be dropped. This way tree size will be controlled by single
+  parameter.
+  
 * Patterns are learned using ensemble of regression trees. Approach is
   embarrassingly parallel. A combine routine that can combine multiple trees
   in an ensemble is required to be implemented to benefit from parallelism.
@@ -15,7 +21,7 @@ TODO:
 * Currently the package requires UCR time series database format (each time 
   series is a row and columns are the observations over time). Therefore,
   time series are assumed to be the same length although LPS can handle
-  time series of different length which requries changes in input format.
+  time series of different length which requires changes in input format.
   
 * LPS can work for multivariate time series similarity. Current version
   needs modifications for multivariate time series.
@@ -24,7 +30,28 @@ TODO:
   requires modification for categorical variables.
 
 ========================================================================
-Change in 1.0-2:
+Changes in 1.0-3:
+
+* Error (mean square error) for each individual tree is generated. 
+  This is useful if some trees do not generate valuable information. 
+  Filtering based on the error rates may improve the results.
+
+* Trees to be used for representation generation and similarity computation
+  can be selected by the modification of 'which.tree' argument in the related
+  functions.
+
+* Introduced totally random splitting strategy when building trees through
+  argument 'random.split' in function 'learnPattern'. This is computationally
+  faster compared to regression splits. Totally random splitting generates a 
+  split from uniform distribution between minimum and maximum observations.
+  Also kd-tree type split is introduced (random.split=2) for which split value 
+  is the median of the observations at each node.
+
+* Introduced prediction capabilities. When "nodes" argument of 
+  "predict.learnPattern" is set to FALSE, average predictions over all trees
+  for each time point are returned. Maybe useful for denoising.
+
+Changes in 1.0-2:
 
 * learnPattern 'replace' argument was returning a segmentation fault, fixed
 

@@ -1,5 +1,5 @@
-computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL,maxdepth=NULL,
-						terminal=TRUE,testrepresentation,refrepresentation) {
+computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdepth=NULL, which.tree=NULL,
+							terminal=TRUE,testrepresentation,refrepresentation) {
 
   if(!is.null(object)){
 	  if (!inherits(object, "learnPattern"))
@@ -28,8 +28,15 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL,maxdept
 		maxdepth <- object$maxdepth
 		warning("invalid depth: reset to the maximum depth provided during training!")
     }
+    if(!is.null(which.tree)){
+		if(length(which.tree)==0) stop("No trees are selected!")
+		usedtrees=array(0,object$ntree)
+		usedtrees[which.tree]=1
+	} else {
+		usedtrees=array(1,object$ntree)
+	}
 	mdim <- ncol(refseries)
-	ntree <- object$forest$ntree
+	ntree <- object$ntree
 	ntrain <- nrow(refseries)
 	ntest <- nrow(testseries)
 	keepIndex <- c("similarity")
@@ -43,6 +50,7 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL,maxdept
 			as.double(object$segment.length),
 		    as.integer(mdim),
 			as.integer(object$ntree),
+			as.integer(usedtrees),
 			object$forest$leftDaughter,
 			object$forest$rightDaughter,
 			object$forest$nodestatus,
