@@ -12,8 +12,8 @@ plotMDS <- function(object, newdata, classinfo, k=2, palette=NULL, pch=20, ...) 
     colnames(lps.mds$points) <- paste("Dim", 1:k)
     nlevs <- nlevels(classinfo)
     if (is.null(palette)) {
-        palette <- if (require(RColorBrewer) && nlevs < 12)
-            brewer.pal(nlevs, "Set1") else rainbow(nlevs)
+        palette <- if (nlevs < 12)
+            RColorBrewer::brewer.pal(nlevs, "Set1") else rainbow(nlevs)
     }
     if (k <= 2) {
         plot(lps.mds$points, col=palette[as.numeric(classinfo)], pch=pch, ...)

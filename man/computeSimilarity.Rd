@@ -10,7 +10,8 @@
 }
 \usage{
 computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
-   maxdepth=NULL,which.tree=NULL,terminal=TRUE,testrepresentation,refrepresentation)
+   maxdepth=NULL,which.tree=NULL,sim.type=0, terminal=TRUE,
+   testrepresentation,refrepresentation)
 }
 \arguments{
   \item{object}{an object of class \code{learnPattern}.}
@@ -19,6 +20,9 @@ computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
   \item{maxdepth}{maximum depth level to be used to generate representations
   for similarity computations.}
   \item{which.tree}{array of trees to be used for similarity computation.}
+  \item{sim.type}{type of the similarity to compute. If set to zero, dissimilarity (absolute
+  differences of the number of patterns) is computed. If set to one, similarity (minimum
+  number of the matching patterns) is computed.}
   \item{terminal}{\code{TRUE} if similarity is computed over the learned representations.}
   \item{testrepresentation}{learned representation for test time series.}
   \item{refrepresentation}{learned representation for reference time series.}

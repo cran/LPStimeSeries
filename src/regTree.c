@@ -36,10 +36,10 @@ void findSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 		   double *ubest, int *ndendl, int *jstat, int mtry,
 		   double sumnode, int nodecnt, int *cat, int splitType) {
     int last, lc, nl, nr, npopl, npopr;
-    int i, j, kv, *mind, *ncase, step;
+    int i, j, kv, *mind, *ncase;
     double *xt, *v, *yl, ubestt,curmin, curmax;; 
     double crit, critmax, critvar, suml, sumr, d, critParent;
-	double impratio=1;
+	// double impratio=1; // introduced for future development
 	
     xt = (double *) Calloc(nsample, double);
     v  = (double *) Calloc(nsample, double);
@@ -168,9 +168,9 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat, int isRand) {
 			 
     int i, j, k, m, ncur, *jdex, *nodestart, *nodepop, nofsampleobs, segmentlen, cur_target, cur_x;
-    int ndstart, ndend, ndendl, nodecnt, jstat, msplit, cnt, totalnodes, sel, add, rotate;
-    double d, ss, av, decsplit, ubest, sumnode, *y, *obsx, rndm, temp=0;
-	clock_t tic, toc;
+    int ndstart, ndend, ndendl, nodecnt, jstat, msplit, cnt, totalnodes, rotate;
+    double d, ss, av, decsplit, ubest, sumnode, *y, *obsx, rndm;
+	// clock_t tic, toc; introduced for debugging purposes
 	segmentlen = (int) (*segfactor * mdim);
 	nofsampleobs = segmentlen * nsample;
 	
@@ -384,7 +384,7 @@ void predictRepresentation_time_series(double *x, int segmentlen, int nsample, i
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, int *nodex, int maxdepth) {
 						
-    int i, j, k, m, rotate=0;
+    int i, j, k, m;
 	
     for (i = 0; i < nsample; i++) {
 		for (j = 0; j < segmentlen ; j++) {

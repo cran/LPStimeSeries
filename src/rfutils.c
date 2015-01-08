@@ -72,14 +72,23 @@ void zeroDouble(double *x, int length) {
     memset(x, 0, length * sizeof(double));
 }
 
-void compute_similarity(int *testterminal, int *noftest, int *trainterminal, int *noftrain, int *nofterminal, int *result){
+void compute_similarity(int *testterminal, int *noftest, int *trainterminal, int *noftrain, int *nofterminal, int *simType, int *result){
     int i,k,j;
     zeroInt(result, (*noftest) * (*noftrain));
     
     for(j=0;j<*noftest;j++){	
         for(i=0;i<*noftrain;i++){
 			for(k=0;k<*nofterminal;k++){
-				result[j+(*noftest)*i]=result[j+(*noftest)*i]+abs(trainterminal[*noftrain*k+i]-testterminal[*noftest*k+j]);
+				if(*simType==0){
+					result[j+(*noftest)*i]=result[j+(*noftest)*i]+abs(trainterminal[*noftrain*k+i]-testterminal[*noftest*k+j]);
+				} else {
+					if(trainterminal[*noftrain*k+i]>testterminal[*noftest*k+j]) {
+						result[j+(*noftest)*i]=result[j+(*noftest)*i]+testterminal[*noftest*k+j];	
+					 } else {
+						result[j+(*noftest)*i]=result[j+(*noftest)*i]+trainterminal[*noftrain*k+i];
+					}
+				}
+							
 			}
 		}
    }

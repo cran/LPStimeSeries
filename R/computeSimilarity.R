@@ -1,5 +1,5 @@
 computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdepth=NULL, which.tree=NULL,
-							terminal=TRUE,testrepresentation,refrepresentation) {
+							sim.type=0, terminal=TRUE,testrepresentation,refrepresentation) {
 
   if(!is.null(object)){
 	  if (!inherits(object, "learnPattern"))
@@ -18,11 +18,29 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdep
 				as.integer(ntest), 
 				as.integer(as.matrix(refrepresentation)),  
 				as.integer(ntrain), 
-				as.integer(nofterminal), 
+				as.integer(nofterminal),
+				as.integer(sim.type), 
 				result=integer(ntest*ntrain))
 	  return(matrix(ans$result,ntest,ntrain))
 	  
   } else {	 #if computation will be performed over raw time series
+  
+      if(!is.matrix(testseries)){
+		if(length(testseries)>0){ #single time series
+			testseries <- t(as.matrix(testseries))
+		}
+		else{
+			stop("data (testseries) has 0 rows")
+		}   
+    } 
+      if(!is.matrix(refseries)){
+		if(length(refseries)>0){ #single time series
+			refseries<- t(as.matrix(refseries))
+		}
+		else{
+			stop("data (refseries) has 0 rows")
+		}   
+    }     
     if(is.null(maxdepth)) maxdepth <- object$maxdepth
     if(maxdepth>object$maxdepth) {
 		maxdepth <- object$maxdepth
@@ -61,6 +79,7 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdep
 			object$forest$splitType,
 			object$forest$ndbigtree,
 			as.integer(maxdepth),
+			as.integer(sim.type),
 			similarity = integer(ntest*ntrain),
 			PACKAGE = "LPStimeSeries")[keepIndex]
 	}

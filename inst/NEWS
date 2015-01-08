@@ -1,5 +1,7 @@
 TODO:
 
+* Speed-up tuneLearnPattern function by removing redundant computations 
+
 * Current implementation grows full tree based on the minimum number of
   observations per tree leaf setting and generates representation based on
   the maximum depth which is not reasonable computationally. Depth level
@@ -30,6 +32,15 @@ TODO:
   requires modification for categorical variables.
 
 ========================================================================
+Changes in 1.0-4:
+
+* A bug in similarity computation, earlier similarity computation for 
+  single test time series was failing if single time series is provided
+  as array (not matrix). Now type of time series (both test and reference)
+  is controlled internally. 
+
+* Codes are cleaned for readibility.
+
 Changes in 1.0-3:
 
 * Error (mean square error) for each individual tree is generated. 

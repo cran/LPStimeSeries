@@ -155,9 +155,12 @@ print(predicted)
 ## Learn patterns and do predictions on OOB time series
 ensemble=learnPattern(GunPoint$trainseries,replace=TRUE,target.diff=FALSE,oob.pred=TRUE)
 ## Plot first series and its OOB approximation
-plot(GunPoint$trainseries[1,],type='l',lty=1,xlab='Time',ylab='Observation',lwd=2)
-points(c(1:ncol(GunPoint$trainseries)),ensemble$oobpredictions[1,],type='l',col=2,lty=2,lwd=2)
-legend('topleft',c('Original series','Approximation'),col=c(1,2),lty=c(1,2),lwd=2)
+plot(GunPoint$trainseries[1,],xlab='Time',ylab='Observation',
+	type='l',lty=1,lwd=2)
+points(c(1:ncol(GunPoint$trainseries)),ensemble$oobpredictions[1,],
+	type='l',col=2,lty=2,lwd=2)
+legend('topleft',c('Original series','Approximation'),
+	col=c(1,2),lty=c(1,2),lwd=2)
 
 }
 \keyword{similarity}

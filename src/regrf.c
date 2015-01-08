@@ -24,7 +24,7 @@ void regRF_time_series(double *x, double *seglength, int *isRand, int *tardiff, 
 
     double  *xb, *predictions, xrand, temp;
     int *in, *targetcount, k, m, n, j, nsample, idx, mdim;
-    int segmentlength, keepF, keepInbag, maxdepth, oobcount=0,oobcount2=0, oobcountperTree;
+    int segmentlength, keepF, keepInbag, maxdepth, oobcount=0,oobcount2=0;
 
     nsample = xdim[0];    		//number of series
     mdim = xdim[1];	      		//length series
@@ -166,7 +166,7 @@ void regForest_similarity(double *x, double *y, int *n, int *ny,
 			double *seglength, int *mdim, int *ntree, int *usedtrees, 
 			int *lDaughter, int *rDaughter, int *nodestatus, int *nodedepth,
 			int *nrnodes, double *xsplit, int *mbest, int *splitType, 
-			int *treeSize, int *maxdepth, int *similarity) {
+			int *treeSize, int *maxdepth, int *simType, int *similarity) {
 				   		                    
     int i, j, k, m, idx1, segmentlength;
     int *noderef, *nodetest, *tempnodestatus, totx, totxtst;
@@ -208,7 +208,15 @@ void regForest_similarity(double *x, double *y, int *n, int *ny,
 				if(tempnodestatus[k]==NODE_TERMINAL){ 
 					for(j = 0; j < (*ny); j++){	
 						for(m = 0; m < (*n); m++){
-							similarity[j+(*ny)*m]=similarity[j+(*ny)*m]+abs(noderef[(*n)*k+m]-nodetest[(*ny)*k+j]);
+							if(*simType==0){
+								similarity[j+(*ny)*m]=similarity[j+(*ny)*m]+abs(noderef[(*n)*k+m]-nodetest[(*ny)*k+j]);
+							} else {
+								if(noderef[(*n)*k+m]>nodetest[(*ny)*k+j]) {
+									similarity[j+(*ny)*m]=similarity[j+(*ny)*m]+nodetest[(*ny)*k+j];	
+								} else {
+									similarity[j+(*ny)*m]=similarity[j+(*ny)*m]+noderef[(*n)*k+m];
+								}
+							}
 						}
 					}
 				}
@@ -228,7 +236,7 @@ void regForest_represent(double *x, int *n, int *whichtree,
 			int *nrnodes, double *xsplit, int *mbest, int *splitType, 
 			int *treeSize, int *maxdepth, int *representation, int *repLength) {
 				
-	int i, k, m, idx1, startind, endind,nodecount, termnodecount, tempidx;
+	int i, k, m, idx1,nodecount, termnodecount, tempidx;
     int *noderef, *tempnodestatus, segmentlength, totx;
 
 	totx=(*n)*(*nrnodes);
@@ -301,7 +309,7 @@ void regForest_predict(double *x, int *n, int *whichtree,
 			double *nodepred, int *treeSize, int *target, int *maxdepth, 
 			double *prediction, int *targetcount) {
 				
-	int i, j, idx1, startind, endind;
+	int i, j, idx1;
     int segmentlength;
 
 
@@ -339,8 +347,8 @@ void regForest_pattern(double *x, int *n, int *whichtree,
 			int *treeSize, int *maxdepth, int *target, int *targetType, 
 			double *predictpattern, double *targetpattern) {
 				
-	int i, j, k, m, idx1, startind, endind, nodecount, termnodecount;
-    int segmentlength, totx, termid, curtree, lastk;
+	int i, j, k, m, idx1, termnodecount;
+    int segmentlength, termid, curtree;
 
 	curtree=*whichtree-1;
 	idx1=*nrnodes*curtree;
@@ -367,7 +375,6 @@ void regForest_pattern(double *x, int *n, int *whichtree,
 			k = 0;
 			while (nodestatus[idx1+k] != NODE_TERMINAL && nodedepth[idx1+k] < *maxdepth) {
 				m = mbest[idx1+k] - 1;
-				lastk = k;
 				if(splitType[idx1+k]==OBS_SERIES){
 					if(m+j>(*mdim)-1){
 						k = (x[m+j-(*mdim)+i*(*mdim)] <= xsplit[idx1+k]) ?
