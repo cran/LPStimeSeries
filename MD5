@@ -1,4 +1,4 @@
-ce77efcd458266dd18a53e60cdea851c *DESCRIPTION
+78e283728f7551337dfabe9ea5da730e *DESCRIPTION
 f7bcf8773e1b2eb9905d635a9b258458 *NAMESPACE
 8266721fdc00f500252430bdb07f678c *R/LPSNews.R
 286ba3f0db26cccff254e1425b23c685 *R/computeSimilarity.R
@@ -19,7 +19,7 @@ e466fc6d6e20b0f0a1bce307298a2be4 *R/zzz.R
 4d92c18a4ede7a15316194a414b9ece7 *man/LPSNews.Rd
 f6ec64bfeeb22f0e4c13222466d9a23a *man/computeSimilarity.Rd
 3a8c89eac6e5e0d0ac758077196ac871 *man/getTreeInfo.Rd
-a177a8a25cb796abd76b8840f1030641 *man/learnPattern.Rd
+79bbe3811bafc126a78ff2bbfa378ba7 *man/learnPattern.Rd
 80d28a3051f1ee49d847d72e4f073bb3 *man/plot.learnPattern.Rd
 a1f94e34946e4d75c9fd14e26463af64 *man/plotMDS.Rd
 1a2d606dee3a99125075782c50c7d9b8 *man/predict.learnPattern.Rd

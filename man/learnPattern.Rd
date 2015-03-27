@@ -3,10 +3,13 @@
 \alias{learnPattern.default}
 \alias{print.learnPattern}
 
-\title{Learn Patterns for Time Series Representation and Similarity}
+\title{Learn Local Auto-Patterns for Time Series Representation and Similarity}
 \description{
   \code{learnPattern} implements ensemble of regression trees (based on
-  Breiman and Cutler's original Fortran code) to learn patterns for time series representation.
+  Breiman and Cutler's original Fortran code) to learn local auto-patterns 
+  for time series representation. Ensemble of regression trees are used to
+  learn an autoregressive model. A local time-varying autoregressive 
+  behavior is learned by the ensemble.
 }
 \usage{
 \method{learnPattern}{default}(x,
